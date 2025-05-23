@@ -28,7 +28,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning> {/* Force dark theme as per spec */}
+    <html lang="en" className="dark" suppressHydrationWarning>{/* Force dark theme as per spec */}
       <body className={`${raleway.variable} ${arimo.variable} antialiased bg-background text-foreground`}>
         <main className="min-h-screen flex flex-col">
           {children}

@@ -2,9 +2,9 @@
 "use client"; // This will be a client-heavy page
 
 import { useState, useEffect, useRef } from 'react';
-import { SendHorizonal } from 'lucide-react'; // Using a Send icon
+import { SendHorizonal, Loader2 } from 'lucide-react'; // Using a Send icon and Loader
+import { conversationalChat } from '@/ai/flows/conversational-chat-flow';
 
-// Placeholder for chat message type
 interface ChatMessage {
   id: string;
   sender: 'user' | 'ai';
@@ -15,6 +15,7 @@ interface ChatMessage {
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -23,7 +24,7 @@ export default function ChatPage() {
 
   useEffect(scrollToBottom, [messages]);
 
-  // Simulate initial AI greeting
+  // Initial AI greeting
   useEffect(() => {
     setMessages([
       {
@@ -37,7 +38,7 @@ export default function ChatPage() {
 
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim()) return;
+    if (!inputText.trim() || isLoadingAI) return;
 
     const userMessage: ChatMessage = {
       id: crypto.randomUUID(),
@@ -48,23 +49,34 @@ export default function ChatPage() {
     setMessages(prev => [...prev, userMessage]);
     const currentInput = inputText;
     setInputText('');
+    setIsLoadingAI(true);
 
-    // Simulate AI response for now
-    // TODO: Replace with actual Genkit flow call in subsequent steps
-    setTimeout(() => {
+    try {
+      const response = await conversationalChat({ userInput: currentInput });
       const aiResponse: ChatMessage = {
         id: crypto.randomUUID(),
         sender: 'ai',
-        text: `AI response to: "${currentInput}" (This is a placeholder for Genkit integration). I can help you process, save, or optimize prompts. Try pasting a block of text or ask me to create a new prompt.`,
+        text: response.aiResponse,
         timestamp: new Date(),
       };
       setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+    } catch (error) {
+      console.error("Error calling conversationalChat flow:", error);
+      const errorResponse: ChatMessage = {
+        id: crypto.randomUUID(),
+        sender: 'ai',
+        text: "Sorry, I encountered an error. Please try again.",
+        timestamp: new Date(),
+      };
+      setMessages(prev => [...prev, errorResponse]);
+    } finally {
+      setIsLoadingAI(false);
+    }
   };
 
   return (
     <div className="flex flex-col h-screen w-full p-4 md:p-6 lg:p-8 bg-background text-foreground font-arimo">
-      {/* Header: Asymmetric positioning - e.g. top-left, not centered */}
+      {/* Header: Asymmetric positioning */}
       <header className="mb-6 md:mb-10 fixed top-4 left-4 md:top-6 md:left-6 lg:top-8 lg:left-8">
         <h1 className="text-3xl md:text-4xl text-foreground font-raleway tracking-wider">
           PromptFlow
@@ -88,10 +100,18 @@ export default function ChatPage() {
             </div>
           </div>
         ))}
+        {isLoadingAI && (
+          <div className="flex justify-start">
+            <div className="max-w-[75%] md:max-w-[65%] p-3 md:p-4 shadow-md bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none flex items-center">
+              <Loader2 className="h-5 w-5 animate-spin mr-2 text-accent" />
+              <p className="text-sm md:text-base text-muted-foreground italic">AI is thinking...</p>
+            </div>
+          </div>
+        )}
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Chat Input Area: Asymmetric positioning - not full width, offset */}
+      {/* Chat Input Area: Asymmetric positioning */}
       <form 
         onSubmit={handleSendMessage} 
         className="mt-auto flex items-center w-full sm:w-11/12 md:w-3/4 lg:w-2/3 
@@ -105,17 +125,25 @@ export default function ChatPage() {
           className="flex-grow p-3 md:p-4 bg-input text-foreground placeholder-muted-foreground 
                      focus:outline-none focus:ring-1 focus:ring-accent 
                      rounded-l-md text-sm md:text-base hairline-border border-muted border-r-0"
+          disabled={isLoadingAI}
         />
         <button
           type="submit"
           className="p-3 md:p-4 bg-primary text-primary-foreground rounded-r-md 
                      hover:bg-opacity-80 transition-colors 
                      focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-background focus:ring-accent
-                     hairline-border border-accent"
+                     hairline-border border-accent flex items-center justify-center"
           aria-label="Send message"
+          disabled={isLoadingAI}
         >
-          <SendHorizonal size={20} className="md:hidden"/>
-          <span className="hidden md:inline text-sm">Send</span>
+          {isLoadingAI ? (
+            <Loader2 size={20} className="animate-spin" />
+          ) : (
+            <>
+              <SendHorizonal size={20} className="md:hidden"/>
+              <span className="hidden md:inline text-sm">Send</span>
+            </>
+          )}
         </button>
       </form>
     </div>

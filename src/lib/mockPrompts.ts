@@ -1,0 +1,56 @@
+import type { Prompt } from './types';
+
+export const mockPrompts: Prompt[] = [
+  {
+    id: '1',
+    name: 'Creative Story Idea Generator',
+    description: 'Generates three unique story ideas based on a given genre and keyword. Useful for breaking writer\'s block.',
+    template: 'Generate three unique story ideas for a {{genre}} story that incorporates the keyword "{{keyword}}". Each idea should be a single paragraph, and provide a potential title for each.',
+    tags: ['creative writing', 'storytelling', 'idea generation'],
+    category: 'Writing',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 5).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 2).toISOString(),
+  },
+  {
+    id: '2',
+    name: 'Email Subject Line Optimizer',
+    description: 'Suggests 5 catchy subject lines for an email with a specific goal. Aims to increase open rates.',
+    template: 'I need 5 catchy email subject lines for an email about {{topic}}. The goal of the email is to {{goal}}. The target audience is {{audience}}. Ensure variety in tone and approach.',
+    tags: ['email marketing', 'copywriting', 'optimization'],
+    category: 'Marketing',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 10).toISOString(),
+  },
+  {
+    id: '3',
+    name: 'Code Explanation',
+    description: 'Explains a piece of code in simple terms, suitable for beginners or for understanding complex logic.',
+    template: 'Explain the following {{language}} code snippet in simple terms, as if explaining to a beginner. Highlight key concepts and potential pitfalls.\n```{{language}}\n{{code_snippet}}\n```',
+    tags: ['programming', 'code', 'education', 'technical'],
+    category: 'Development',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 30).toISOString(),
+  },
+  {
+    id: '4',
+    name: 'Product Description Writer',
+    description: 'Writes a compelling product description for an e-commerce site, focusing on benefits and features.',
+    template: 'Write a compelling product description (around 150 words) for a {{product_name}}. Key features include: {{feature1}}, {{feature2}}, {{feature3}}. The target customer is {{customer_profile}}. The tone should be {{tone}}. Emphasize the unique selling proposition.',
+    tags: ['e-commerce', 'copywriting', 'product'],
+    category: 'Marketing',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 7).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 1).toISOString(),
+  },
+  {
+    id: '5',
+    name: 'Meeting Summary Generator',
+    description: 'Generates a concise summary of meeting notes, highlighting key decisions and action items.',
+    template: 'Based on the following meeting notes, generate a concise summary. The summary should include: \n1. Key discussion points.\n2. Decisions made.\n3. Action items (with assigned individuals if mentioned).\n\nMeeting Notes:\n{{meeting_notes}}',
+    tags: ['productivity', 'summary', 'meeting'],
+    category: 'Business',
+    createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+    updatedAt: new Date(Date.now() - 1000 * 60 * 60 * 24 * 3).toISOString(),
+  },
+];
+
+export const mockCategories = ["Writing", "Marketing", "Development", "Business", "Personal"];

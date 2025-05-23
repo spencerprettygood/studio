@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo } from 'react';
@@ -20,8 +21,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog"; // AlertDialogTrigger removed as it's not directly used here, AlertDialog wraps PromptCard which might use it internally or via onDelete click.
+
+const ALL_CATEGORIES_SENTINEL = "__ALL_CATEGORIES_SENTINEL__";
+const ALL_TAGS_SENTINEL = "__ALL_TAGS_SENTINEL__";
 
 export default function PromptsPage() {
   const [prompts, setPrompts] = useState<Prompt[]>([]);
@@ -148,23 +151,33 @@ export default function PromptsPage() {
             />
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <Select 
+              value={selectedCategory} 
+              onValueChange={(value) => {
+                setSelectedCategory(value === ALL_CATEGORIES_SENTINEL ? '' : value);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by category" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Categories</SelectItem>
+                <SelectItem value={ALL_CATEGORIES_SENTINEL}>All Categories</SelectItem>
                 {mockCategories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Select value={selectedTag} onValueChange={setSelectedTag}>
+            <Select 
+              value={selectedTag} 
+              onValueChange={(value) => {
+                setSelectedTag(value === ALL_TAGS_SENTINEL ? '' : value);
+              }}
+            >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by tag" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Tags</SelectItem>
+                <SelectItem value={ALL_TAGS_SENTINEL}>All Tags</SelectItem>
                 {allTags.map(tag => (
                   <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                 ))}

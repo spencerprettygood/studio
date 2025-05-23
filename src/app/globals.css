@@ -4,98 +4,99 @@
 
 @layer base {
   :root {
-    --background: 0 0% 96%; /* Light Gray #F5F5F5 */
-    --foreground: 0 0% 20%; /* Dark Gray for text */
+    /* Base: Pure black (#000000) for primary backgrounds */
+    --background: 0 0% 0%;
+    /* Text: White (#FFFFFF) for primary text */
+    --foreground: 0 0% 100%;
 
-    --card: 0 0% 100%; /* White */
-    --card-foreground: 0 0% 20%; /* Dark Gray */
+    /* Secondary: Dark grays (#0F0F0F, #1A1A1A) for secondary surfaces and hover states */
+    /* Using #1A1A1A as a general secondary background / card-like surface */
+    --card: 0 0% 10%; /* #1A1A1A */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 100%; /* White */
-    --popover-foreground: 0 0% 20%; /* Dark Gray */
+    --popover: 0 0% 10%; /* #1A1A1A */
+    --popover-foreground: 0 0% 100%;
 
-    --primary: 240 60% 88%; /* Soft Lavender */
-    --primary-foreground: 240 10% 15%; /* Dark Purple/Gray for text on Lavender */
+    /* Accent: #ff4233 (hsl(5, 100%, 60%)) */
+    --primary: 5 100% 60%;
+    --primary-foreground: 0 0% 100%; /* White text on accent */
 
-    --secondary: 0 0% 92%; /* Lighter gray for secondary buttons */
-    --secondary-foreground: 0 0% 20%; /* Dark Gray for text on secondary buttons */
+    /* Secondary elements, using a slightly lighter gray than card for some distinction if needed */
+    --secondary: 0 0% 6%; /* #0F0F0F */
+    --secondary-foreground: 0 0% 93%; /* Light gray #AAAAAA for secondary text */
 
-    --muted: 0 0% 90%; /* Slightly darker gray for muted backgrounds */
-    --muted-foreground: 0 0% 40%; /* Medium Gray for muted text */
+    /* Muted text / inactive elements */
+    --muted: 0 0% 20%; /* Medium gray #333333 for lines/borders */
+    --muted-foreground: 0 0% 67%; /* Light gray #AAAAAA for secondary text */
 
-    --accent: 195 26% 56%; /* Muted Teal */
-    --accent-foreground: 0 0% 100%; /* White for text on Teal */
+    /* Accent is the primary interaction color */
+    --accent: 5 100% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
+    --destructive: 0 84.2% 60.2%; /* Standard destructive, can be themed later if needed */
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 88%; /* Light gray for borders */
-    --input: 0 0% 100%; /* White for input backgrounds */
-    --ring: 240 60% 75%; /* Stronger Lavender for focus rings on primary elements */
+    /* Lines/Borders: Medium gray (#333333) and light gray (#666666) */
+    --border: 0 0% 20%; /* #333333 */
+    --input: 0 0% 10%; /* Similar to card for input backgrounds */
+    --ring: 5 100% 70%; /* Accent color for focus rings */
 
-    --radius: 0.5rem;
+    --radius: 0.375rem; /* Reduced radius for a sharper feel, can be adjusted */
 
-    /* Chart colors - can be adjusted to fit the theme */
-    --chart-1: 195 26% 56%; /* Muted Teal */
-    --chart-2: 240 60% 80%; /* Lighter Lavender */
-    --chart-3: 195 20% 70%; /* Lighter Teal */
-    --chart-4: 240 50% 70%; /* Medium Lavender */
-    --chart-5: 0 0% 50%; /* Medium Gray */
-    
-    /* Sidebar specific colors */
-    --sidebar-background: 0 0% 93%; /* Slightly darker than main background */
-    --sidebar-foreground: 0 0% 25%; /* Dark gray for text */
-    --sidebar-primary: 240 60% 85%; /* Lavender for sidebar primary elements */
-    --sidebar-primary-foreground: 240 10% 15%; /* Dark Purple/Gray */
-    --sidebar-accent: 195 26% 50%; /* Teal for sidebar accents */
-    --sidebar-accent-foreground: 0 0% 100%; /* White */
-    --sidebar-border: 0 0% 85%;
-    --sidebar-ring: 240 60% 75%;
+    /* Chart colors - will need significant thought for "irregular forms" */
+    --chart-1: 5 100% 60%; /* Accent */
+    --chart-2: 0 0% 67%;   /* Light Gray */
+    --chart-3: 0 0% 40%;   /* Medium Gray #666666 */
+    --chart-4: 0 0% 20%;   /* Darker Gray #333333 */
+    --chart-5: 0 0% 93%;   /* Lighter Gray text color for contrast */
+
+    /* Sidebar specific colors - not strictly needed for single page chat but keeping for consistency */
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 5 100% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 5 100% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 20%;
+    --sidebar-ring: 5 100% 70%;
   }
 
   .dark {
-    /* TODO: Define dark theme colors if needed, for now, focusing on light theme */
-    --background: 0 0% 10%;
-    --foreground: 0 0% 95%;
-
-    --card: 0 0% 12%;
-    --card-foreground: 0 0% 95%;
-
-    --popover: 0 0% 12%;
-    --popover-foreground: 0 0% 95%;
-
-    --primary: 240 50% 60%; /* Darker Lavender */
-    --primary-foreground: 0 0% 100%; 
-
-    --secondary: 195 20% 30%; /* Darker Teal */
-    --secondary-foreground: 0 0% 95%;
-
+    /* Dark is the default and only theme for now based on specs */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
+    --primary: 5 100% 60%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 6%;
+    --secondary-foreground: 0 0% 93%;
     --muted: 0 0% 20%;
-    --muted-foreground: 0 0% 60%;
-
-    --accent: 195 30% 70%; /* Brighter Teal for dark mode */
-    --accent-foreground: 0 0% 10%;
-
-    --destructive: 0 70% 50%;
+    --muted-foreground: 0 0% 67%;
+    --accent: 5 100% 60%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 0 0% 25%;
-    --input: 0 0% 22%;
-    --ring: 240 50% 70%;
+    --border: 0 0% 20%;
+    --input: 0 0% 10%;
+    --ring: 5 100% 70%;
     
-    --chart-1: 195 30% 70%;
-    --chart-2: 240 50% 65%;
-    --chart-3: 195 25% 50%;
-    --chart-4: 240 40% 50%;
-    --chart-5: 0 0% 70%;
+    --chart-1: 5 100% 60%;
+    --chart-2: 0 0% 67%;
+    --chart-3: 0 0% 40%;
+    --chart-4: 0 0% 20%;
+    --chart-5: 0 0% 93%;
 
-    --sidebar-background: 0 0% 12%;
-    --sidebar-foreground: 0 0% 90%;
-    --sidebar-primary: 240 50% 65%;
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 5 100% 60%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 195 30% 65%;
-    --sidebar-accent-foreground: 0 0% 10%;
+    --sidebar-accent: 5 100% 60%;
+    --sidebar-accent-foreground: 0 0% 100%;
     --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 240 50% 70%;
+    --sidebar-ring: 5 100% 70%;
   }
 }
 
@@ -105,6 +106,22 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: var(--font-geist-sans), sans-serif;
+    font-family: var(--font-arimo), sans-serif; /* Default to Arimo for body */
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-raleway), sans-serif;
+    font-weight: 200; /* Raleway ultra-thin */
+    letter-spacing: 0.05em; /* +5% letter spacing for headings */
+  }
+
+  /* Hair-thin lines utility */
+  .hairline-border {
+    border-width: 0.5px;
+  }
+  /* Fallback for browsers not supporting 0.5px */
+  @supports not (border-width: 0.5px) {
+    .hairline-border {
+      border-width: 1px;
+    }
   }
 }

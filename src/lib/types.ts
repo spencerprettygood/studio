@@ -1,3 +1,4 @@
+
 export interface Prompt {
   id: string;
   name: string;
@@ -14,3 +15,13 @@ export interface Prompt {
 }
 
 export type PromptFormData = Omit<Prompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
+
+export interface ProcessedPromptData {
+  generatedTitle: string;
+  identifiedPrompt: string;
+  description: string;
+  suggestedCategory: string;
+  suggestedTags: string[];
+  qualityAnalysis: string;
+  followUpPromptSuggestion?: string;
+}

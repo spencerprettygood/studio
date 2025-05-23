@@ -13,11 +13,9 @@ import {
   SidebarMenuButton, 
   SidebarInset,
   SidebarTrigger
-  // useSidebar removed as MobileHeader is now a separate client component
 } from '@/components/ui/sidebar';
 import Link from 'next/link';
-import { Home, PlusCircle, Settings, Brain, Rows3 } from 'lucide-react'; // Menu removed
-// Button import removed as MobileHeader handles its own button
+import { Home, PlusCircle, Settings, Brain, Rows3, Wand2 } from 'lucide-react';
 import { MobileHeader } from '@/components/MobileHeader';
 
 const geistSans = Geist({
@@ -34,8 +32,6 @@ export const metadata: Metadata = {
   title: 'PromptFlow',
   description: 'Organize and optimize your AI LLM prompts.',
 };
-
-// MobileHeader function definition moved to src/components/MobileHeader.tsx
 
 export default function RootLayout({
   children,
@@ -76,6 +72,14 @@ export default function RootLayout({
                     <Link href="/prompts">
                       <Rows3 />
                       <span>All Prompts</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild tooltip={{ children: "Prompt Processor", sideOffset: 8 }}>
+                    <Link href="/prompts/processor">
+                      <Wand2 />
+                      <span>Processor</span>
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

@@ -2,7 +2,7 @@
 "use client"; // This will be a client-heavy page
 
 import { useState, useEffect, useRef } from 'react';
-import { SendHorizonal, Loader2 } from 'lucide-react'; // Using a Send icon and Loader
+import { Loader2 } from 'lucide-react'; // Using Loader icon
 import { conversationalChat } from '@/ai/flows/conversational-chat-flow';
 
 interface ChatMessage {
@@ -10,6 +10,7 @@ interface ChatMessage {
   sender: 'user' | 'ai';
   text: string;
   timestamp: Date;
+  isFresh?: boolean; // For animation
 }
 
 export default function ChatPage() {
@@ -30,8 +31,9 @@ export default function ChatPage() {
       {
         id: crypto.randomUUID(),
         sender: 'ai',
-        text: "Welcome to PromptFlow! I'm here to help you manage, organize, and optimize your prompts. You can ask me questions, or if you have a bunch of prompts you'd like me to look at, just paste them in!",
+        text: "Welcome to roFl! I'm your assistant for managing, organizing, and optimizing prompts. Paste a bunch of prompts, ask me questions, or tell me what you need!",
         timestamp: new Date(),
+        isFresh: true,
       }
     ]);
   }, []);
@@ -45,8 +47,9 @@ export default function ChatPage() {
       sender: 'user',
       text: inputText,
       timestamp: new Date(),
+      isFresh: true,
     };
-    setMessages(prev => [...prev, userMessage]);
+    setMessages(prev => [...prev.map(m => ({...m, isFresh: false})), userMessage]);
     const currentInput = inputText;
     setInputText('');
     setIsLoadingAI(true);
@@ -58,8 +61,9 @@ export default function ChatPage() {
         sender: 'ai',
         text: response.aiResponse,
         timestamp: new Date(),
+        isFresh: true,
       };
-      setMessages(prev => [...prev, aiResponse]);
+      setMessages(prev => [...prev.map(m => ({...m, isFresh: false})), aiResponse]);
     } catch (error) {
       console.error("Error calling conversationalChat flow:", error);
       const errorResponse: ChatMessage = {
@@ -67,27 +71,35 @@ export default function ChatPage() {
         sender: 'ai',
         text: "Sorry, I encountered an error. Please try again.",
         timestamp: new Date(),
+        isFresh: true,
       };
-      setMessages(prev => [...prev, errorResponse]);
+      setMessages(prev => [...prev.map(m => ({...m, isFresh: false})), errorResponse]);
     } finally {
       setIsLoadingAI(false);
     }
   };
 
   return (
-    <div className="flex flex-col h-screen w-full p-4 md:p-6 lg:p-8 bg-background text-foreground font-arimo">
+    <div className="flex flex-col h-screen w-full p-4 md:p-6 lg:p-8 bg-background text-foreground font-arimo relative">
+      {/* Top decorative line */}
+      <div className="absolute top-4 left-0 right-0 mx-auto w-11/12 h-[0.5px] bg-muted opacity-50"></div>
+
       {/* Header: Asymmetric positioning */}
-      <header className="mb-6 md:mb-10 fixed top-4 left-4 md:top-6 md:left-6 lg:top-8 lg:left-8">
-        <h1 className="text-3xl md:text-4xl text-foreground font-raleway tracking-wider">
-          PromptFlow
+      <header className="mb-6 md:mb-10 fixed top-8 left-4 md:top-10 md:left-6 lg:top-12 lg:left-8 z-10">
+        <h1 className="text-3xl md:text-4xl text-foreground font-raleway tracking-wider italic font-semibold">
+          roFl
         </h1>
       </header>
 
       {/* Chat Messages Area - Offset to create asymmetry */}
-      <div className="flex-grow overflow-y-auto mb-4 pt-20 md:pt-24 lg:pt-28 pr-1 md:pr-2 space-y-4 
+      <div className="flex-grow overflow-y-auto mb-4 pt-24 md:pt-28 lg:pt-32 pr-1 md:pr-2 space-y-4 
                       md:ml-[5%] lg:ml-[10%] md:mr-[2%] lg:mr-[5%]"> {/* Asymmetric margins */}
         {messages.map((msg) => (
-          <div key={msg.id} className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+          <div 
+            key={msg.id} 
+            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} ${msg.isFresh ? 'animate-fadeIn' : ''}`}
+            onAnimationEnd={() => setMessages(prev => prev.map(m => m.id === msg.id ? {...m, isFresh: false} : m))}
+          >
             <div
               className={`max-w-[75%] md:max-w-[65%] p-3 md:p-4 shadow-md
                 ${msg.sender === 'user' ? 'bg-secondary text-primary-foreground ml-auto rounded-lg rounded-br-none' : 'bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none'}
@@ -101,7 +113,7 @@ export default function ChatPage() {
           </div>
         ))}
         {isLoadingAI && (
-          <div className="flex justify-start">
+          <div className="flex justify-start animate-fadeIn">
             <div className="max-w-[75%] md:max-w-[65%] p-3 md:p-4 shadow-md bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none flex items-center">
               <Loader2 className="h-5 w-5 animate-spin mr-2 text-accent" />
               <p className="text-sm md:text-base text-muted-foreground italic">AI is thinking...</p>
@@ -121,7 +133,7 @@ export default function ChatPage() {
           type="text"
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
-          placeholder="Converse with PromptFlow AI..."
+          placeholder="Converse with roFl..."
           className="flex-grow p-3 md:p-4 bg-input text-foreground placeholder-muted-foreground 
                      focus:outline-none focus:ring-1 focus:ring-accent 
                      rounded-l-md text-sm md:text-base hairline-border border-muted border-r-0"
@@ -139,10 +151,7 @@ export default function ChatPage() {
           {isLoadingAI ? (
             <Loader2 size={20} className="animate-spin" />
           ) : (
-            <>
-              <SendHorizonal size={20} className="md:hidden"/>
-              <span className="hidden md:inline text-sm">Send</span>
-            </>
+            <span className="text-sm font-medium">Send</span>
           )}
         </button>
       </form>

@@ -17,7 +17,7 @@ const arimo = Arimo({
 });
 
 export const metadata: Metadata = {
-  title: 'PromptFlow',
+  title: 'roFl',
   description: 'Organize and optimize your AI LLM prompts with an intuitive chat interface.',
 };
 
@@ -27,13 +27,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${raleway.variable} ${arimo.variable} antialiased bg-background text-foreground`}>
+    <html lang="en" className="dark" suppressHydrationWarning><body className={`${raleway.variable} ${arimo.variable} antialiased bg-background text-foreground`}>
         <main className="min-h-screen flex flex-col">
           {children}
         </main>
         <Toaster />
-      </body>
-    </html>
+      </body></html>
   );
 }

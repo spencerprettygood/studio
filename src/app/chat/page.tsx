@@ -30,7 +30,7 @@ export default function ChatPage() {
       {
         id: crypto.randomUUID(),
         sender: 'ai',
-        text: 'Welcome to PromptFlow. How can I assist you with your prompts today?',
+        text: "Welcome to PromptFlow! I'm here to help you manage, organize, and optimize your prompts. You can ask me questions, or if you have a bunch of prompts you'd like me to look at, just paste them in!",
         timestamp: new Date(),
       }
     ]);

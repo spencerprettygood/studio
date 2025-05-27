@@ -2,8 +2,10 @@
 "use client"; // This will be a client-heavy page
 
 import { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react'; // Using Loader icon
-import { conversationalChat } from '@/ai/flows/conversational-chat-flow';
+import { Loader2 } from 'lucide-react';
+import { conversationalChat, type ConversationalChatOutput } from '@/ai/flows/conversational-chat-flow';
+import type { Prompt } from '@/lib/types';
+import { mockPrompts as initialMockPrompts } from '@/lib/mockPrompts'; // For initializing local state
 
 interface ChatMessage {
   id: string;
@@ -18,6 +20,7 @@ export default function ChatPage() {
   const [inputText, setInputText] = useState('');
   const [isLoadingAI, setIsLoadingAI] = useState(false);
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
+  const [prompts, setPrompts] = useState<Prompt[]>(initialMockPrompts); // Manage prompts locally
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -31,7 +34,7 @@ export default function ChatPage() {
       {
         id: crypto.randomUUID(),
         sender: 'ai',
-        text: "Welcome to roFl! I'm your assistant for managing, organizing, and optimizing prompts. Paste a bunch of prompts, ask me questions, or tell me what you need!",
+        text: "Welcome to roFl! I'm your witty assistant for all things prompts. Paste a bunch, ask me to create one, or just chat. What's on your mind?",
         timestamp: new Date(),
         isFresh: true,
       }
@@ -55,7 +58,7 @@ export default function ChatPage() {
     setIsLoadingAI(true);
 
     try {
-      const response = await conversationalChat({ userInput: currentInput });
+      const response: ConversationalChatOutput = await conversationalChat({ userInput: currentInput });
       const aiResponse: ChatMessage = {
         id: crypto.randomUUID(),
         sender: 'ai',
@@ -64,6 +67,32 @@ export default function ChatPage() {
         isFresh: true,
       };
       setMessages(prev => [...prev.map(m => ({...m, isFresh: false})), aiResponse]);
+
+      if (response.action === 'save_prompt' && response.promptToSaveData) {
+        // Access properties directly to avoid enumerating a potential proxy object
+        const dataFromServer = response.promptToSaveData;
+        const newPrompt: Prompt = {
+          id: dataFromServer.id || crypto.randomUUID(), // Should be provided by server
+          name: dataFromServer.name,
+          description: dataFromServer.description || '',
+          template: dataFromServer.template,
+          tags: dataFromServer.tags || [],
+          category: dataFromServer.category || 'Uncategorized',
+          createdAt: dataFromServer.createdAt || new Date().toISOString(), // Should be provided
+          updatedAt: dataFromServer.updatedAt || new Date().toISOString(), // Should be provided
+        };
+        setPrompts(prevPrompts => [...prevPrompts, newPrompt]);
+        // Optional: Add another chat message confirming the local save or showing updated prompt count
+        // For example:
+        // const systemMessage: ChatMessage = {
+        //   id: crypto.randomUUID(),
+        //   sender: 'ai',
+        //   text: `(Prompt "${newPrompt.name}" also updated in your current session.)`,
+        //   timestamp: new Date(),
+        // };
+        // setMessages(prev => [...prev, systemMessage]);
+      }
+
     } catch (error) {
       console.error("Error calling conversationalChat flow:", error);
       const errorResponse: ChatMessage = {
@@ -86,7 +115,7 @@ export default function ChatPage() {
 
       {/* Header: Asymmetric positioning */}
       <header className="mb-6 md:mb-10 fixed top-8 left-4 md:top-10 md:left-6 lg:top-12 lg:left-8 z-10">
-        <h1 className="text-3xl md:text-4xl text-foreground font-raleway tracking-wider italic font-semibold">
+        <h1 className="text-3xl md:text-4xl text-foreground font-raleway tracking-wider italic font-bold">
           roFl
         </h1>
       </header>

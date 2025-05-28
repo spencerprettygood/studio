@@ -44,8 +44,8 @@ export type ConversationalChatOutput = z.infer<typeof ConversationalChatOutputSc
 
 
 // Thresholds for detecting if input is a batch of prompts
-const PROMPT_BATCH_MIN_LENGTH = 200;
-const PROMPT_BATCH_MIN_NEWLINES = 1;
+const PROMPT_BATCH_MIN_LENGTH = 200; 
+const PROMPT_BATCH_MIN_NEWLINES = 1; 
 
 function formatProcessedPromptsForChat(processedPrompts: ProcessedPromptData[]): string {
   if (!processedPrompts || processedPrompts.length === 0) {
@@ -122,7 +122,7 @@ const llmPrompt = ai.definePrompt({
   name: 'conversationalChatPrompt',
   input: {schema: ConversationalChatInputSchema},
   output: {schema: ConversationalChatOutputSchema},
-  tools: [getPromptsTool, generatePromptTemplate],
+  tools: [getPromptsTool, generatePromptTemplate], // Added generatePromptTemplate tool
   prompt: `You are roFl, a witty, highly intelligent, and slightly irreverent AI assistant for managing and optimizing LLM prompts. Your primary goal is to help users create, refine, organize, and find prompts.
 
   Conversation Style:
@@ -136,9 +136,9 @@ const llmPrompt = ai.definePrompt({
       *   If the user expresses a need for a new prompt (e.g., "help me make a prompt to write emails," "I need a prompt for X"), initiate a process to help them.
       *   Ask clarifying questions to understand:
           *   The *purpose* of the prompt.
-          *   The key *inputs* or `{{variables}}` it will need.
+          *   The key *inputs* or {{variables}} it will need.
           *   A description of the *desired output*.
-          *   Any other `additionalContext` (e.g., tone, audience, specific constraints).
+          *   Any other additionalContext (e.g., tone, audience, specific constraints).
       *   Once you have sufficient details, call the 'generatePromptTemplate' tool with this information.
       *   Present the generated template, suggested name, and explanation clearly to the user.
       *   Example: "Alright, based on what you told me, here's a draft: [template] - I've called it '[suggestedName]'. It's designed to [explanation]. What do you think? Shall I save it?"

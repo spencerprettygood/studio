@@ -1,3 +1,4 @@
+
 'use server';
 /**
  * @fileOverview Tools for interacting with the prompt library.
@@ -5,8 +6,8 @@
  */
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {mockPrompts, PromptSchema} from '@/lib/mockPrompts'; // Assuming PromptSchema is also in mockPrompts or types
-import type { Prompt } from '@/lib/types';
+import {mockPrompts} from '@/lib/mockPrompts'; // Import only mockPrompts from here
+import { PromptSchema, type Prompt } from '@/lib/types'; // Import PromptSchema and Prompt type from here
 
 
 export const getPromptsTool = ai.defineTool(
@@ -42,3 +43,4 @@ export const getPromptsTool = ai.defineTool(
     return filteredPrompts.map(p => ({...p}));
   }
 );
+

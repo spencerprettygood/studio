@@ -1,4 +1,6 @@
 
+import { z } from 'zod';
+
 export interface Prompt {
   id: string;
   name: string;
@@ -13,6 +15,17 @@ export interface Prompt {
   // steps?: Array<{ type: 'llmCall', prompt: string, model?: string } | { type: 'logic', condition: string }>;
   category?: string; // Optional category
 }
+
+export const PromptSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  template: z.string(),
+  tags: z.array(z.string()),
+  createdAt: z.string().describe("ISO date string for when the prompt was created."),
+  updatedAt: z.string().describe("ISO date string for when the prompt was last updated."),
+  category: z.string().optional(),
+});
 
 export type PromptFormData = Omit<Prompt, 'id' | 'createdAt' | 'updatedAt'> & { id?: string };
 

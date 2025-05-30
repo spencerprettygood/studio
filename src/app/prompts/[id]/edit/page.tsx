@@ -3,9 +3,9 @@
 import { PromptForm } from '@/components/PromptForm';
 import { mockPrompts } from '@/lib/mockPrompts';
 import type { PromptFormData } from '@/lib/types';
-import { useParams, useRouter }sfrom 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 
 export default function EditPromptPage() {

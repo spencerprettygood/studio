@@ -49,16 +49,6 @@
     --chart-3: 0 0% 40%;   /* Medium Gray #666666 */
     --chart-4: 0 0% 20%;   /* Darker Gray #333333 */
     --chart-5: 0 0% 93%;   /* Lighter Gray text color for contrast */
-
-    /* Sidebar specific colors - not strictly needed for single page chat but keeping for consistency */
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 5 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 5 100% 60%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 5 100% 70%;
   }
 
   .dark {
@@ -88,15 +78,6 @@
     --chart-3: 0 0% 40%;
     --chart-4: 0 0% 20%;
     --chart-5: 0 0% 93%;
-
-    --sidebar-background: 0 0% 0%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 5 100% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 5 100% 60%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 20%;
-    --sidebar-ring: 5 100% 70%;
   }
 }
 

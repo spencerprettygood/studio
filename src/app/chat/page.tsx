@@ -100,7 +100,7 @@ export default function ChatPage() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-full p-4 md:p-6 lg:p-8 bg-background text-foreground font-arimo relative">
+    <div className="flex flex-col h-screen w-full p-4 md:p-6 lg:p-8 bg-background text-foreground font-sans relative">
       {/* Top decorative line */}
       <div className="absolute top-4 left-0 right-0 mx-auto w-11/12 h-[0.5px] bg-muted opacity-50"></div>
 
@@ -122,7 +122,7 @@ export default function ChatPage() {
           >
             <div
               className={`max-w-[75%] md:max-w-[65%] p-3 md:p-4 shadow-md
-                ${msg.sender === 'user' ? 'bg-secondary text-primary-foreground ml-auto rounded-lg rounded-br-none' : 'bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none'}
+                ${msg.sender === 'user' ? 'bg-secondary text-secondary-foreground ml-auto rounded-lg rounded-br-none' : 'bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none'}
               `}
             >
               <p className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{msg.text}</p>
@@ -135,8 +135,8 @@ export default function ChatPage() {
         {isLoadingAI && (
           <div className="flex justify-start animate-fadeIn">
             <div className="max-w-[75%] md:max-w-[65%] p-3 md:p-4 shadow-md bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none flex items-center">
-              <Loader2 className="h-5 w-5 animate-spin mr-2 text-accent" />
-              <p className="text-sm md:text-base text-muted-foreground italic">AI is thinking...</p>
+              <Loader2 className="h-5 w-5 animate-spin mr-2 text-primary" />
+              <p className="text-sm md:text-base text-muted-foreground italic">roFl is thinking...</p>
             </div>
           </div>
         )}
@@ -155,16 +155,16 @@ export default function ChatPage() {
           onChange={(e) => setInputText(e.target.value)}
           placeholder="Converse with roFl..."
           className="flex-grow p-3 md:p-4 bg-input text-foreground placeholder-muted-foreground 
-                     focus:outline-none focus:ring-1 focus:ring-accent 
+                     focus:outline-none focus:ring-1 focus:ring-primary
                      rounded-l-md text-sm md:text-base hairline-border border-muted border-r-0"
           disabled={isLoadingAI}
         />
         <button
           type="submit"
           className="p-3 md:p-4 bg-primary text-primary-foreground rounded-r-md 
-                     hover:bg-opacity-80 transition-colors 
-                     focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-background focus:ring-accent
-                     hairline-border border-accent flex items-center justify-center"
+                     hover:bg-primary/90 transition-colors 
+                     focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-background focus:ring-primary
+                     hairline-border border-primary flex items-center justify-center"
           aria-label="Send message"
           disabled={isLoadingAI}
         >

@@ -1,3 +1,4 @@
+
 import type { Metadata } from 'next';
 import { Raleway, Arimo } from 'next/font/google';
 import './globals.css';
@@ -27,11 +28,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark" suppressHydrationWarning><body className={`${raleway.variable} ${arimo.variable} antialiased bg-background text-foreground`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body className={`${raleway.variable} ${arimo.variable} antialiased bg-background text-foreground`}>
         <main className="min-h-screen flex flex-col">
           {children}
         </main>
         <Toaster />
-      </body></html>
+      </body>
+    </html>
   );
 }

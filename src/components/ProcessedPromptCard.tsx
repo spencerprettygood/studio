@@ -23,7 +23,7 @@ export function ProcessedPromptCard({ processedPrompt }: ProcessedPromptCardProp
         name: processedPrompt.generatedTitle,
         description: processedPrompt.description,
         template: processedPrompt.identifiedPrompt,
-        tags: processedPrompt.suggestedTags.join(', '),
+        tags: processedPrompt.suggestedTags, // should be an array
         category: processedPrompt.suggestedCategory,
       }));
       router.push('/prompts/new');
@@ -40,7 +40,7 @@ export function ProcessedPromptCard({ processedPrompt }: ProcessedPromptCardProp
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary-foreground_real_primary_if_primary_is_light_else_text_primary">
+        <CardTitle className="text-xl font-semibold text-primary">
           {processedPrompt.generatedTitle}
         </CardTitle>
         {processedPrompt.description && (

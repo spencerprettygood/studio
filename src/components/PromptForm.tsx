@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,7 +21,7 @@ import type { PromptFormData } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { Brain, Save, Download, Lightbulb, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { PromptOptimizerDialog } from "./PromptOptimizerDialog";
 import { mockCategories } from "@/lib/mockPrompts";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "./ui/select";
@@ -29,7 +30,10 @@ const promptFormSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters." }).max(100),
   description: z.string().min(10, { message: "Description must be at least 10 characters." }).max(500),
   template: z.string().min(10, { message: "Prompt template must be at least 10 characters." }),
-  tags: z.string().refine(value => {
+  tags: z.union([z.string(), z.array(z.string())]).transform((val) => {
+    if (Array.isArray(val)) return val.join(', ');
+    return val;
+  }).refine(value => {
     const tags = value.split(',').map(tag => tag.trim()).filter(Boolean);
     return tags.length > 0;
   }, { message: "Please enter at least one tag." }),
@@ -41,7 +45,6 @@ type PromptFormValues = z.infer<typeof promptFormSchema>;
 interface PromptFormProps {
   initialData?: PromptFormData;
   isEditing?: boolean;
-  // onSubmit: (data: PromptFormValues) => Promise<void>; // Replace with actual save logic
 }
 
 export function PromptForm({ initialData, isEditing = false }: PromptFormProps) {
@@ -50,22 +53,26 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
 
-  const defaultValues = initialData ? {
-    ...initialData,
-    tags: initialData.tags?.join(', ') || '',
-  } : {
-    name: "",
-    description: "",
-    template: "",
-    tags: "",
-    category: "",
-  };
-
   const form = useForm<PromptFormValues>({
     resolver: zodResolver(promptFormSchema),
-    defaultValues,
+    defaultValues: {
+      name: "",
+      description: "",
+      template: "",
+      tags: "",
+      category: "",
+    },
     mode: "onChange",
   });
+  
+  useEffect(() => {
+    if (initialData) {
+      form.reset({
+        ...initialData,
+        tags: Array.isArray(initialData.tags) ? initialData.tags.join(', ') : initialData.tags,
+      });
+    }
+  }, [initialData, form]);
 
   const currentPromptTemplate = form.watch("template");
 
@@ -83,6 +90,7 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
       description: `The prompt "${data.name}" has been ${isEditing ? 'updated' : 'saved'} successfully.`,
     });
     router.push("/prompts"); // Redirect to prompts list page
+    router.refresh(); // To see the new prompt
     setIsSubmitting(false);
   }
 
@@ -102,7 +110,7 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
       createdAt: initialData?.id ? new Date().toISOString() : new Date().toISOString(), // Simplified
       updatedAt: new Date().toISOString(),
     };
-    const jsonString = `data:text/json;charset=utf-f,${encodeURIComponent(
+    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
       JSON.stringify(promptToExport, null, 2)
     )}`;
     const link = document.createElement("a");
@@ -249,7 +257,7 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
               <div className="flex gap-2">
                 {isEditing && (
                   <Button type="button" variant="destructive" onClick={() => router.push('/prompts')} disabled={isSubmitting}>
-                    <Trash2 className="mr-2 h-4 w-4" /> Delete (Mock)
+                     Cancel
                   </Button>
                 )}
                 <Button type="submit" disabled={isSubmitting} size="lg">

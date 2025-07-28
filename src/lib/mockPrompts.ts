@@ -1,3 +1,4 @@
+
 import type { Prompt } from './types';
 
 export const mockPrompts: Prompt[] = [

@@ -1,3 +1,4 @@
+
 "use client"; // Required for useParams
 
 import { PromptForm } from '@/components/PromptForm';
@@ -26,17 +27,15 @@ export default function EditPromptPage() {
           setPromptData(foundPrompt);
         } else {
           setError("Prompt not found.");
-          // Optionally redirect if not found after a delay, or show error prominently
-          // router.push('/404'); 
         }
         setIsLoading(false);
       }, 500);
     }
-  }, [id, router]);
+  }, [id]);
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto space-y-4">
+      <div className="max-w-4xl mx-auto p-4 space-y-4">
         <Skeleton className="h-12 w-1/2" />
         <Card>
           <CardHeader>
@@ -62,7 +61,7 @@ export default function EditPromptPage() {
 
   if (error) {
     return (
-       <div className="max-w-4xl mx-auto">
+       <div className="max-w-4xl mx-auto p-4">
         <Card className="mt-10">
           <CardHeader>
             <CardTitle className="text-destructive">Error</CardTitle>
@@ -77,11 +76,11 @@ export default function EditPromptPage() {
   
   if (!promptData) {
      // This case should ideally be handled by error state or redirect.
-    return <div className="max-w-4xl mx-auto"><p>Prompt data could not be loaded.</p></div>;
+    return <div className="max-w-4xl mx-auto p-4"><p>Prompt data could not be loaded.</p></div>;
   }
 
   return (
-    <div className="max-w-4xl mx-auto">
+    <div className="max-w-4xl mx-auto p-4">
       <PromptForm initialData={promptData} isEditing={true} />
     </div>
   );

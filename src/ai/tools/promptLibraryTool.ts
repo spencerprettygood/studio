@@ -43,4 +43,3 @@ export const getPromptsTool = ai.defineTool(
     return filteredPrompts.map(p => ({...p}));
   }
 );
-

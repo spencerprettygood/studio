@@ -1,10 +1,11 @@
+
 "use client";
 
 import type { Prompt } from '@/lib/types';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Pencil, Eye, Download, Trash2 } from 'lucide-react';
+import { Pencil, Download, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -18,7 +19,7 @@ export function PromptCard({ prompt, onDelete, onExport }: PromptCardProps) {
   return (
     <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 rounded-lg">
       <CardHeader>
-        <CardTitle className="text-xl font-semibold text-primary-foreground_real_primary_if_primary_is_light_else_text_primary">{prompt.name}</CardTitle> {/* This needs to be fixed in globals or here if primary is too light for text */}
+        <CardTitle className="text-xl font-semibold text-primary">{prompt.name}</CardTitle>
         <CardDescription className="text-sm text-muted-foreground">
           Updated {formatDistanceToNow(new Date(prompt.updatedAt), { addSuffix: true })}
         </CardDescription>
@@ -55,12 +56,3 @@ export function PromptCard({ prompt, onDelete, onExport }: PromptCardProps) {
     </Card>
   );
 }
-
-// Temporary fix for CardTitle color if --primary is too light
-// Replace text-primary-foreground_real_primary_if_primary_is_light_else_text_primary with text-[hsl(var(--primary))] or appropriate dark color
-// For example: className="text-xl font-semibold text-[hsl(var(--primary-foreground))] if primary is dark, or text-[hsl(var(--foreground))] if primary is light
-// The current primary (Lavender) is light, so CardTitle should use a dark color for contrast.
-// Let's assume CardTitle should be --foreground or a darker shade of --primary.
-// The class CardTitle in card.tsx is "text-2xl font-semibold leading-none tracking-tight". No color is specified, so it inherits.
-// This means it should use `text-card-foreground`, which is `0 0% 20%` (Dark Gray). That should be fine.
-// I'll remove the placeholder class.

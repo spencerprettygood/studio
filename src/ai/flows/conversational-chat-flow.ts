@@ -11,7 +11,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import { processUnstructuredPrompts, type ProcessUnstructuredPromptsOutput } from '@/ai/flows/process-unstructured-prompts';
-import { generatePromptTemplate, type GeneratePromptTemplateOutput } from '@/ai/flows/generate-prompt-template-flow';
+import { generatePromptTemplate } from '@/ai/flows/generate-prompt-template-flow';
 import { mockPrompts, addMockPrompt } from '@/lib/mockPrompts';
 import type { Prompt, ProcessedPromptData } from '@/lib/types';
 import { getPromptsTool } from '@/ai/tools/promptLibraryTool';

@@ -82,15 +82,6 @@ export default function ChatPage() {
           updatedAt: dataFromServer.updatedAt || new Date().toISOString(), // Should be provided
         };
         setPrompts(prevPrompts => [...prevPrompts, newPrompt]);
-        // Optional: Add another chat message confirming the local save or showing updated prompt count
-        // For example:
-        // const systemMessage: ChatMessage = {
-        //   id: crypto.randomUUID(),
-        //   sender: 'ai',
-        //   text: `(Prompt "${newPrompt.name}" also updated in your current session.)`,
-        //   timestamp: new Date(),
-        // };
-        // setMessages(prev => [...prev, systemMessage]);
       }
 
     } catch (error) {

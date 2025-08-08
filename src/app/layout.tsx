@@ -1,20 +1,13 @@
 
 import type { Metadata } from 'next';
-import { Raleway, Arimo } from 'next/font/google';
+import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
+import { Header } from '@/components/Header';
 
-// Typography: Raleway for headings (ultra-thin), Arimo for body
-const raleway = Raleway({
+const inter = Inter({ 
   subsets: ['latin'],
-  variable: '--font-raleway',
-  weight: '200', // Ultra-thin
-});
-
-const arimo = Arimo({
-  subsets: ['latin'],
-  variable: '--font-arimo',
-  weight: ['400', '700'], // Regular and Bold if needed
+  variable: '--font-sans',
 });
 
 export const metadata: Metadata = {
@@ -29,7 +22,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
-      <body className={`${raleway.variable} ${arimo.variable} antialiased bg-background text-foreground`}>
+      <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
+        <Header />
         <main className="min-h-screen flex flex-col">
           {children}
         </main>

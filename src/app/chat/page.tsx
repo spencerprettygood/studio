@@ -1,180 +1,115 @@
 
-"use client"; // This will be a client-heavy page
+"use client";
 
-import { useState, useEffect, useRef } from 'react';
-import { Loader2 } from 'lucide-react';
+import { useState, useEffect, useRef, FormEvent } from 'react';
 import { conversationalChat, type ConversationalChatOutput } from '@/ai/flows/conversational-chat-flow';
-import type { Prompt } from '@/lib/types';
-import { mockPrompts as initialMockPrompts } from '@/lib/mockPrompts'; // For initializing local state
+import { Loader2, ArrowRight } from 'lucide-react';
 
 interface ChatMessage {
   id: string;
-  sender: 'user' | 'ai';
-  text: string;
-  timestamp: Date;
-  isFresh?: boolean; // For animation
+  role: 'user' | 'assistant';
+  content: string;
+  isFresh?: boolean;
 }
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [inputText, setInputText] = useState('');
-  const [isLoadingAI, setIsLoadingAI] = useState(false);
-  const messagesEndRef = useRef<null | HTMLDivElement>(null);
-  const [prompts, setPrompts] = useState<Prompt[]>(initialMockPrompts); // Manage prompts locally
+  const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(scrollToBottom, [messages]);
-
-  // Initial AI greeting
   useEffect(() => {
     setMessages([
       {
         id: crypto.randomUUID(),
-        sender: 'ai',
-        text: "Welcome to roFl! I'm your witty assistant for all things prompts. Paste a bunch, ask me to create one, or just chat. What's on your mind?",
-        timestamp: new Date(),
+        role: 'assistant',
+        content: "I'm roFl. Your AI prompt engineering partner. What are we creating today?",
         isFresh: true,
       }
     ]);
   }, []);
+  
+  useEffect(() => {
+    // Focus input when the page loads or after an AI response
+    if (!isLoading) {
+      inputRef.current?.focus();
+    }
+  }, [isLoading]);
 
-  const handleSendMessage = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!inputText.trim() || isLoadingAI) return;
+    if (!input.trim() || isLoading) return;
 
-    const userMessage: ChatMessage = {
-      id: crypto.randomUUID(),
-      sender: 'user',
-      text: inputText,
-      timestamp: new Date(),
-      isFresh: true,
-    };
-    setMessages(prev => [...prev.map(m => ({...m, isFresh: false})), userMessage]);
-    const currentInput = inputText;
-    setInputText('');
-    setIsLoadingAI(true);
+    const userMessage: ChatMessage = { id: crypto.randomUUID(), role: 'user', content: input };
+    setMessages(prev => [...prev, userMessage]);
+    const currentInput = input;
+    setInput('');
+    setIsLoading(true);
 
     try {
-      const response: ConversationalChatOutput = await conversationalChat({ userInput: currentInput });
-      const aiResponse: ChatMessage = {
+      const result: ConversationalChatOutput = await conversationalChat({ userInput: currentInput });
+      const aiMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        sender: 'ai',
-        text: response.aiResponse,
-        timestamp: new Date(),
+        role: 'assistant',
+        content: result.aiResponse,
         isFresh: true,
       };
-      setMessages(prev => [...prev.map(m => ({...m, isFresh: false})), aiResponse]);
-
-      if (response.action === 'save_prompt' && response.promptToSaveData) {
-        // Access properties directly to avoid enumerating a potential proxy object
-        const dataFromServer = response.promptToSaveData;
-        const newPrompt: Prompt = {
-          id: dataFromServer.id || crypto.randomUUID(), // Should be provided by server
-          name: dataFromServer.name,
-          description: dataFromServer.description || '',
-          template: dataFromServer.template,
-          tags: dataFromServer.tags || [],
-          category: dataFromServer.category || 'Uncategorized',
-          createdAt: dataFromServer.createdAt || new Date().toISOString(), // Should be provided
-          updatedAt: dataFromServer.updatedAt || new Date().toISOString(), // Should be provided
-        };
-        setPrompts(prevPrompts => [...prevPrompts, newPrompt]);
-      }
-
+      setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
-      console.error("Error calling conversationalChat flow:", error);
-      const errorResponse: ChatMessage = {
+      console.error("Error in conversational chat:", error);
+      const errorMessage: ChatMessage = {
         id: crypto.randomUUID(),
-        sender: 'ai',
-        text: "Sorry, I encountered an error. Please try again.",
-        timestamp: new Date(),
+        role: 'assistant',
+        content: "My circuits seem to be crossed. Please try that again in a moment.",
         isFresh: true,
       };
-      setMessages(prev => [...prev.map(m => ({...m, isFresh: false})), errorResponse]);
+      setMessages(prev => [...prev, errorMessage]);
     } finally {
-      setIsLoadingAI(false);
+      setIsLoading(false);
     }
   };
+  
+  const latestAiMessage = messages.filter(m => m.role === 'assistant').pop();
 
   return (
-    <div className="flex flex-col h-screen w-full p-4 md:p-6 lg:p-8 bg-background text-foreground font-sans relative">
-      {/* Top decorative line */}
-      <div className="absolute top-4 left-0 right-0 mx-auto w-11/12 h-[0.5px] bg-muted opacity-50"></div>
-
-      {/* Header: Asymmetric positioning */}
-      <header className="mb-6 md:mb-10 fixed top-8 left-4 md:top-10 md:left-6 lg:top-12 lg:left-8 z-10">
-        <h1 className="text-3xl md:text-4xl text-foreground font-raleway tracking-wider italic font-bold">
-          roFl
-        </h1>
-      </header>
-
-      {/* Chat Messages Area - Offset to create asymmetry */}
-      <div className="flex-grow overflow-y-auto mb-4 pt-24 md:pt-28 lg:pt-32 pr-1 md:pr-2 space-y-4 
-                      md:ml-[5%] lg:ml-[10%] md:mr-[2%] lg:mr-[5%]"> {/* Asymmetric margins */}
-        {messages.map((msg) => (
-          <div 
-            key={msg.id} 
-            className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'} ${msg.isFresh ? 'animate-fadeIn' : ''}`}
-            onAnimationEnd={() => setMessages(prev => prev.map(m => m.id === msg.id ? {...m, isFresh: false} : m))}
-          >
-            <div
-              className={`max-w-[75%] md:max-w-[65%] p-3 md:p-4 shadow-md
-                ${msg.sender === 'user' ? 'bg-secondary text-secondary-foreground ml-auto rounded-lg rounded-br-none' : 'bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none'}
-              `}
-            >
-              <p className="whitespace-pre-wrap text-sm md:text-base leading-relaxed">{msg.text}</p>
-              <p className="text-xs mt-2 opacity-70 text-right">
-                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-              </p>
-            </div>
-          </div>
-        ))}
-        {isLoadingAI && (
-          <div className="flex justify-start animate-fadeIn">
-            <div className="max-w-[75%] md:max-w-[65%] p-3 md:p-4 shadow-md bg-card text-card-foreground mr-auto rounded-lg rounded-bl-none flex items-center">
-              <Loader2 className="h-5 w-5 animate-spin mr-2 text-primary" />
-              <p className="text-sm md:text-base text-muted-foreground italic">roFl is thinking...</p>
-            </div>
-          </div>
-        )}
-        <div ref={messagesEndRef} />
-      </div>
-
-      {/* Chat Input Area: Asymmetric positioning */}
-      <form 
-        onSubmit={handleSendMessage} 
-        className="mt-auto flex items-center w-full sm:w-11/12 md:w-3/4 lg:w-2/3 
-                   self-center md:ml-[calc(5%_+_theme(spacing.2))] lg:ml-[calc(10%_+_theme(spacing.4))] mb-2 md:mb-4" // Asymmetric alignment
-      >
-        <input
-          type="text"
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
-          placeholder="Converse with roFl..."
-          className="flex-grow p-3 md:p-4 bg-input text-foreground placeholder-muted-foreground 
-                     focus:outline-none focus:ring-1 focus:ring-primary
-                     rounded-l-md text-sm md:text-base hairline-border border-muted border-r-0"
-          disabled={isLoadingAI}
-        />
-        <button
-          type="submit"
-          className="p-3 md:p-4 bg-primary text-primary-foreground rounded-r-md 
-                     hover:bg-primary/90 transition-colors 
-                     focus:outline-none focus:ring-1 focus:ring-offset-1 focus:ring-offset-background focus:ring-primary
-                     hairline-border border-primary flex items-center justify-center"
-          aria-label="Send message"
-          disabled={isLoadingAI}
+    <div className="flex flex-col items-center justify-center min-h-screen w-full text-foreground p-4">
+      <main className="w-full max-w-2xl flex flex-col items-center justify-center flex-grow transition-all duration-300 ease-in-out">
+        
+        {/* Display the latest AI message */}
+        <div 
+          key={latestAiMessage?.id} 
+          className="text-center text-2xl md:text-4xl font-light text-foreground/90 leading-tight mb-8 animate-fadeIn"
+          onAnimationEnd={() => {
+            if (latestAiMessage) {
+              latestAiMessage.isFresh = false;
+            }
+          }}
         >
-          {isLoadingAI ? (
-            <Loader2 size={20} className="animate-spin" />
-          ) : (
-            <span className="text-sm font-medium">Send</span>
-          )}
-        </button>
-      </form>
+          {latestAiMessage?.content}
+        </div>
+
+        {/* Input Form */}
+        <form onSubmit={handleSubmit} className="w-full relative mt-4">
+          <input
+            ref={inputRef}
+            type="text"
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={isLoading ? "roFl is thinking..." : "Type here..."}
+            className="w-full bg-transparent text-2xl md:text-4xl text-center placeholder:text-muted-foreground/50 focus:outline-none py-2 font-light"
+            disabled={isLoading}
+          />
+          <button 
+            type="submit" 
+            className="absolute right-0 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors disabled:opacity-50"
+            disabled={isLoading || !input.trim()}
+            aria-label="Send message"
+          >
+            {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : <ArrowRight className="h-6 w-6" />}
+          </button>
+        </form>
+
+      </main>
     </div>
   );
 }

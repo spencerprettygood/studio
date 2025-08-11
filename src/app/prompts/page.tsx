@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 
 const ALL_CATEGORIES_SENTINEL = "__ALL_CATEGORIES_SENTINEL__";
+const ALL_TAGS_SENTINEL = "__ALL_TAGS_SENTINEL__";
 
 const fetchPrompts = async (): Promise<Prompt[]> => {
     const promptsCollection = collection(db, 'prompts');
@@ -175,13 +176,15 @@ export default function PromptsPage() {
             </Select>
             <Select 
               value={selectedTag} 
-              onValueChange={(value) => setSelectedTag(value)}
+              onValueChange={(value) => {
+                setSelectedTag(value === ALL_TAGS_SENTINEL ? '' : value);
+              }}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by tag" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Tags</SelectItem>
+                <SelectItem value={ALL_TAGS_SENTINEL}>All Tags</SelectItem>
                 {allTags.map(tag => (
                   <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                 ))}

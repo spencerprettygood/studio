@@ -133,9 +133,9 @@ export default function PromptsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold text-foreground">Prompt Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Prompt Dashboard</h1>
         <Button asChild size="lg">
           <Link href="/prompts/new">
             <PlusCircle className="mr-2 h-5 w-5" /> New Prompt

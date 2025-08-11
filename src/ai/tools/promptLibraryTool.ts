@@ -2,44 +2,66 @@
 'use server';
 /**
  * @fileOverview Tools for interacting with the prompt library.
- * - getPromptsTool - Fetches prompts, optionally filtered by category or tags.
+ * - getPromptsTool - Fetches prompts from Firestore, optionally filtered.
  */
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {mockPrompts} from '@/lib/mockPrompts'; // Import only mockPrompts from here
-import { PromptSchema, type Prompt } from '@/lib/types'; // Import PromptSchema and Prompt type from here
-
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, DocumentData } from 'firebase/firestore';
+import { PromptSchema, type Prompt } from '@/lib/types';
 
 export const getPromptsTool = ai.defineTool(
   {
     name: 'getPromptsTool',
     description:
-      'Retrieves a list of saved prompts. Can be filtered by category or tags. Use this to show the user their existing prompts or to find relevant prompts for a task they are describing.',
+      'Retrieves a list of saved prompts from the Firestore database. Can be filtered by category or tags. Use this to show the user their existing prompts or to find relevant prompts for a task they are describing.',
     inputSchema: z.object({
-      category: z.string().optional().describe("The category to filter prompts by. If omitted, prompts from all categories are considered."),
-      tags: z.array(z.string()).optional().describe("A list of tags to filter prompts by. Prompts must include all specified tags. If omitted, tags are not used for filtering."),
+      category: z.string().optional().describe("The category to filter prompts by."),
+      tags: z.array(z.string()).optional().describe("A list of tags to filter prompts by. Prompts must include all specified tags."),
     }),
     outputSchema: z.array(PromptSchema).describe("An array of prompt objects that match the criteria."),
   },
   async (input) => {
-    // Direct property access to avoid potential enumeration issues with Next.js `params`-like objects
-    const category = input.category;
-    const tags = input.tags;
-
-    let filteredPrompts: Prompt[] = mockPrompts;
-
-    if (category) {
-      filteredPrompts = filteredPrompts.filter(p => p.category === category);
-    }
-
-    // Ensure tags is an array and has elements before using array methods
-    if (Array.isArray(tags) && tags.length > 0) {
-      filteredPrompts = filteredPrompts.filter(p =>
-        p.tags && tags.every(tag => p.tags.includes(tag))
-      );
-    }
+    const { category, tags } = input;
     
-    // Return copies to prevent accidental mutation of the mockPrompts array if it were more complex
-    return filteredPrompts.map(p => ({...p}));
+    // Base query for the 'prompts' collection
+    let promptsQuery = query(collection(db, "prompts"));
+
+    // Apply filters
+    if (category) {
+      promptsQuery = query(promptsQuery, where("category", "==", category));
+    }
+    if (tags && tags.length > 0) {
+      // Firestore's 'array-contains-all' is not available, so we use 'array-contains' for each tag.
+      // This is a limitation; for complex queries, a more advanced data structure or third-party search service would be needed.
+      // For now, we'll filter post-query for simplicity, or apply one tag filter if possible.
+      // A single 'array-contains' is efficient. Multiple requires post-filtering.
+      promptsQuery = query(promptsQuery, where("tags", "array-contains", tags[0]));
+    }
+
+    const querySnapshot = await getDocs(promptsQuery);
+    let prompts: Prompt[] = [];
+    querySnapshot.forEach((doc) => {
+        const data = doc.data() as DocumentData;
+        const prompt: Prompt = {
+            id: doc.id,
+            name: data.name,
+            description: data.description,
+            template: data.template,
+            tags: data.tags,
+            category: data.category,
+            // Convert Firestore Timestamps to ISO strings
+            createdAt: data.createdAt.toDate().toISOString(),
+            updatedAt: data.updatedAt.toDate().toISOString(),
+        };
+        prompts.push(prompt);
+    });
+
+    // If multiple tags were provided, perform secondary filtering in memory
+    if (tags && tags.length > 1) {
+        prompts = prompts.filter(p => tags.every(tag => p.tags.includes(tag)));
+    }
+
+    return prompts;
   }
 );

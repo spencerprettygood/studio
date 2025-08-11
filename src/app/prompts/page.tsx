@@ -1,16 +1,19 @@
 
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { collection, getDocs, deleteDoc, doc, query, where, DocumentData } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+import type { Prompt } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PromptCard } from '@/components/PromptCard';
-import type { Prompt } from '@/lib/types';
-import { mockPrompts, mockCategories } from '@/lib/mockPrompts';
-import { PlusCircle, Search, XCircle } from 'lucide-react';
+import { mockCategories } from '@/lib/mockPrompts';
+import { PlusCircle, Search, XCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -21,37 +24,64 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog"; // AlertDialogTrigger removed as it's not directly used here, AlertDialog wraps PromptCard which might use it internally or via onDelete click.
+} from "@/components/ui/alert-dialog";
 
 const ALL_CATEGORIES_SENTINEL = "__ALL_CATEGORIES_SENTINEL__";
-const ALL_TAGS_SENTINEL = "__ALL_TAGS_SENTINEL__";
+
+const fetchPrompts = async (): Promise<Prompt[]> => {
+    const promptsCollection = collection(db, 'prompts');
+    const snapshot = await getDocs(promptsCollection);
+    return snapshot.docs.map(doc => {
+        const data = doc.data() as DocumentData;
+        return {
+            id: doc.id,
+            name: data.name,
+            description: data.description,
+            template: data.template,
+            tags: data.tags || [],
+            category: data.category,
+            createdAt: data.createdAt.toDate().toISOString(),
+            updatedAt: data.updatedAt.toDate().toISOString(),
+        };
+    });
+};
 
 export default function PromptsPage() {
-  const [prompts, setPrompts] = useState<Prompt[]>([]);
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [selectedTag, setSelectedTag] = useState<string>('');
-  const [isLoading, setIsLoading] = useState(true);
-  const { toast } = useToast();
-
   const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
 
-  useEffect(() => {
-    // Simulate fetching data
-    setTimeout(() => {
-      setPrompts(mockPrompts);
-      setIsLoading(false);
-    }, 500);
-  }, []);
+  const { data: prompts = [], isLoading } = useQuery<Prompt[]>({
+    queryKey: ['prompts'],
+    queryFn: fetchPrompts,
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => deleteDoc(doc(db, "prompts", id)),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+      toast({
+        title: "Prompt Deleted",
+        description: "The prompt has been successfully deleted.",
+      });
+      setPromptToDelete(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Error Deleting Prompt",
+        description: error.message,
+        variant: "destructive",
+      });
+      setPromptToDelete(null);
+    }
+  });
 
   const handleDeletePrompt = (id: string) => {
-    setPrompts(prevPrompts => prevPrompts.filter(p => p.id !== id));
-    toast({
-      title: "Prompt Deleted",
-      description: "The prompt has been successfully deleted.",
-      variant: "default",
-    });
-    setPromptToDelete(null);
+    deleteMutation.mutate(id);
   };
 
   const handleExportPrompt = (prompt: Prompt) => {
@@ -70,7 +100,7 @@ export default function PromptsPage() {
 
   const allTags = useMemo(() => {
     const tagsSet = new Set<string>();
-    prompts.forEach(p => p.tags.forEach(tag => tagsSet.add(tag)));
+    prompts.forEach(p => p.tags?.forEach(tag => tagsSet.add(tag)));
     return Array.from(tagsSet).sort();
   }, [prompts]);
 
@@ -80,7 +110,7 @@ export default function PromptsPage() {
         prompt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         prompt.description.toLowerCase().includes(searchTerm.toLowerCase());
       const matchesCategory = selectedCategory ? prompt.category === selectedCategory : true;
-      const matchesTag = selectedTag ? prompt.tags.includes(selectedTag) : true;
+      const matchesTag = selectedTag ? prompt.tags?.includes(selectedTag) : true;
       return matchesSearchTerm && matchesCategory && matchesTag;
     });
   }, [prompts, searchTerm, selectedCategory, selectedTag]);
@@ -95,33 +125,9 @@ export default function PromptsPage() {
 
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <h1 className="text-3xl font-bold text-foreground">Prompt Dashboard</h1>
-          <Button disabled size="lg">
-            <PlusCircle className="mr-2 h-5 w-5" /> New Prompt
-          </Button>
+       <div className="flex justify-center items-center h-screen">
+          <Loader2 className="h-12 w-12 animate-spin text-primary" />
         </div>
-         <Card>
-          <CardHeader><CardTitle>Filter Prompts</CardTitle></CardHeader>
-          <CardContent className="animate-pulse space-y-4">
-            <div className="h-10 bg-muted rounded-md"></div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="h-10 bg-muted rounded-md"></div>
-              <div className="h-10 bg-muted rounded-md"></div>
-            </div>
-          </CardContent>
-        </Card>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3].map(i => (
-            <Card key={i} className="animate-pulse">
-              <CardHeader><div className="h-6 w-3/4 bg-muted rounded"></div><div className="h-4 w-1/2 bg-muted rounded mt-2"></div></CardHeader>
-              <CardContent><div className="h-12 bg-muted rounded"></div><div className="flex gap-2 mt-3"><div className="h-6 w-16 bg-muted rounded-full"></div><div className="h-6 w-20 bg-muted rounded-full"></div></div></CardContent>
-              <CardFooter><div className="h-10 w-full bg-muted rounded"></div></CardFooter>
-            </Card>
-          ))}
-        </div>
-      </div>
     );
   }
 
@@ -169,15 +175,13 @@ export default function PromptsPage() {
             </Select>
             <Select 
               value={selectedTag} 
-              onValueChange={(value) => {
-                setSelectedTag(value === ALL_TAGS_SENTINEL ? '' : value);
-              }}
+              onValueChange={(value) => setSelectedTag(value)}
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by tag" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={ALL_TAGS_SENTINEL}>All Tags</SelectItem>
+                <SelectItem value="">All Tags</SelectItem>
                 {allTags.map(tag => (
                   <SelectItem key={tag} value={tag}>{tag}</SelectItem>
                 ))}
@@ -211,7 +215,12 @@ export default function PromptsPage() {
                   </AlertDialogHeader>
                   <AlertDialogFooter>
                     <AlertDialogCancel onClick={() => setPromptToDelete(null)}>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={() => handleDeletePrompt(prompt.id)} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                    <AlertDialogAction 
+                      onClick={() => handleDeletePrompt(prompt.id)} 
+                      disabled={deleteMutation.isPending}
+                      className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                    >
+                      {deleteMutation.isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                       Delete
                     </AlertDialogAction>
                   </AlertDialogFooter>

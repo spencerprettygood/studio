@@ -8,11 +8,9 @@ import { collection, getDocs, deleteDoc, doc, DocumentData } from 'firebase/fire
 import { db } from '@/lib/firebase';
 import type { Prompt } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent } from '@/components/ui/card';
 import { PromptCard } from '@/components/PromptCard';
-import { PlusCircle, Search, XCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Search, Loader2, Bot } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
   AlertDialog,
@@ -24,9 +22,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { categorizePromptsByUsecase } from '@/ai/flows/categorize-prompts-flow';
+import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
-const ALL_CATEGORIES_SENTINEL = "__ALL_CATEGORIES_SENTINEL__";
-const ALL_TAGS_SENTINEL = "__ALL_TAGS_SENTINEL__";
 
 const fetchPrompts = async (): Promise<Prompt[]> => {
     const promptsCollection = collection(db, 'prompts');
@@ -43,45 +42,32 @@ const fetchPrompts = async (): Promise<Prompt[]> => {
             createdAt: data.createdAt.toDate().toISOString(),
             updatedAt: data.updatedAt.toDate().toISOString(),
         };
-    });
-};
-
-// This function is for fetching the available categories for the filter dropdown
-const fetchFilterData = async () => {
-    const prompts = await fetchPrompts(); // Re-uses the main fetch function
-    const categoriesSet = new Set<string>();
-    const tagsSet = new Set<string>();
-    prompts.forEach(p => {
-        if (p.category) categoriesSet.add(p.category);
-        p.tags?.forEach(tag => tagsSet.add(tag));
-    });
-    return {
-        prompts,
-        categories: Array.from(categoriesSet).sort(),
-        tags: Array.from(tagsSet).sort()
-    };
+    }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
 };
 
 export default function PromptsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [selectedTag, setSelectedTag] = useState<string>('');
   const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
 
-  const { data, isLoading } = useQuery({
-    queryKey: ['promptsDashboard'],
-    queryFn: fetchFilterData,
+  const { data: prompts, isLoading: isLoadingPrompts } = useQuery({
+    queryKey: ['prompts'],
+    queryFn: fetchPrompts,
   });
 
-  const { prompts = [], categories = [], tags: allTags = [] } = data || {};
+  const { data: aiCategories, isLoading: isLoadingCategories } = useQuery({
+    queryKey: ['aiCategories', prompts],
+    queryFn: () => categorizePromptsByUsecase({ prompts: prompts || [] }),
+    enabled: !!prompts && prompts.length > 0,
+  });
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteDoc(doc(db, "prompts", id)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['promptsDashboard'] });
+      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+      queryClient.invalidateQueries({ queryKey: ['aiCategories'] });
       toast({
         title: "Prompt Deleted",
         description: "The prompt has been successfully deleted.",
@@ -116,29 +102,22 @@ export default function PromptsPage() {
     });
   };
 
-  const filteredPrompts = useMemo(() => {
-    return prompts.filter(prompt => {
-      const matchesSearchTerm = 
-        prompt.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        prompt.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory ? prompt.category === selectedCategory : true;
-      const matchesTag = selectedTag ? prompt.tags?.includes(selectedTag) : true;
-      return matchesSearchTerm && matchesCategory && matchesTag;
-    });
-  }, [prompts, searchTerm, selectedCategory, selectedTag]);
+  const displayedPrompts = useMemo(() => {
+    if (selectedCategory === 'All') {
+      return prompts || [];
+    }
+    const category = aiCategories?.categories.find(c => c.name === selectedCategory);
+    const promptIds = category?.promptIds || [];
+    return (prompts || []).filter(p => promptIds.includes(p.id));
+  }, [prompts, selectedCategory, aiCategories]);
 
-  const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedCategory('');
-    setSelectedTag('');
-  };
-  
-  const hasActiveFilters = searchTerm || selectedCategory || selectedTag;
+  const isLoading = isLoadingPrompts || (!!prompts && prompts.length > 0 && isLoadingCategories);
 
   if (isLoading) {
     return (
-       <div className="flex justify-center items-center h-screen">
+       <div className="flex flex-col justify-center items-center h-screen space-y-4">
           <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <p className="text-muted-foreground">Loading and categorizing prompts...</p>
         </div>
     );
   }
@@ -154,65 +133,48 @@ export default function PromptsPage() {
         </Button>
       </div>
 
-      <Card className="shadow-sm">
-        <CardHeader>
-          <CardTitle>Filter Prompts</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-            <Input 
-              placeholder="Search by name or description..." 
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Select 
-              value={selectedCategory} 
-              onValueChange={(value) => {
-                setSelectedCategory(value === ALL_CATEGORIES_SENTINEL ? '' : value);
-              }}
+      {/* AI Visual Categorization */}
+      {aiCategories && aiCategories.categories.length > 0 && (
+        <div>
+          <h2 className="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
+            <Bot className="h-5 w-5 text-primary" />
+            <span>AI-Powered Use Cases</span>
+          </h2>
+          <p className="text-muted-foreground mb-4 text-sm">The AI has analyzed your library and grouped your prompts into these use cases. Click one to filter.</p>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+             <button
+              onClick={() => setSelectedCategory('All')}
+              className={cn(
+                "p-4 rounded-lg border text-left transition-all duration-200 hover:border-primary",
+                selectedCategory === 'All' ? 'bg-primary/10 border-primary shadow-md' : 'bg-card border-border'
+              )}
             >
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by category" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_CATEGORIES_SENTINEL}>All Categories</SelectItem>
-                {categories.map(category => (
-                  <SelectItem key={category} value={category}>{category}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Select 
-              value={selectedTag} 
-              onValueChange={(value) => {
-                setSelectedTag(value === ALL_TAGS_SENTINEL ? '' : value);
-              }}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Filter by tag" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={ALL_TAGS_SENTINEL}>All Tags</SelectItem>
-                {allTags.map(tag => (
-                  <SelectItem key={tag} value={tag}>{tag}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              <h3 className="font-semibold text-foreground">All Prompts</h3>
+              <p className="text-sm text-muted-foreground">{prompts?.length || 0} total</p>
+            </button>
+            {aiCategories.categories.map((cat) => (
+              <button
+                key={cat.name}
+                onClick={() => setSelectedCategory(cat.name)}
+                className={cn(
+                    "p-4 rounded-lg border text-left transition-all duration-200 hover:border-primary",
+                    selectedCategory === cat.name ? 'bg-primary/10 border-primary shadow-md' : 'bg-card border-border'
+                )}
+              >
+                <h3 className="font-semibold text-foreground">{cat.name}</h3>
+                <p className="text-sm text-muted-foreground">{cat.description}</p>
+              </button>
+            ))}
           </div>
-          {hasActiveFilters && (
-             <Button variant="ghost" onClick={clearFilters} className="text-sm text-muted-foreground hover:text-foreground">
-                <XCircle className="mr-2 h-4 w-4" /> Clear Filters
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+        </div>
+      )}
       
-      {filteredPrompts.length > 0 ? (
+      <Separator />
+
+      {/* Prompts Grid */}
+      {displayedPrompts.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredPrompts.map(prompt => (
+          {displayedPrompts.map(prompt => (
             <AlertDialog key={prompt.id}>
               <PromptCard 
                 prompt={prompt} 
@@ -244,14 +206,14 @@ export default function PromptsPage() {
           ))}
         </div>
       ) : (
-        <Card className="text-center py-12 shadow-sm">
+        <Card className="text-center py-12 shadow-sm col-span-full">
           <CardContent className="space-y-4">
             <Search className="mx-auto h-16 w-16 text-muted-foreground/50" />
             <h3 className="text-xl font-semibold text-foreground">No Prompts Found</h3>
             <p className="text-muted-foreground">
-              {hasActiveFilters ? "Try adjusting your search or filter criteria." : "Create a new prompt to get started!"}
+              {prompts && prompts.length > 0 ? "No prompts match the selected category." : "Create a new prompt to get started!"}
             </p>
-            {!hasActiveFilters && (
+            {(!prompts || prompts.length === 0) && (
                  <Button asChild className="mt-4">
                     <Link href="/prompts/new">
                         <PlusCircle className="mr-2 h-5 w-5" /> Create New Prompt

@@ -130,7 +130,7 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
         </p>
       </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(mutation.mutate)} className="space-y-8">
+        <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))} className="space-y-8">
             <div className="space-y-6 p-6 border rounded-lg bg-card">
               <FormField
                 control={form.control}
@@ -191,7 +191,7 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
                       />
                     </FormControl>
                     <FormDescription>
-                      The core content of your prompt. You can use double curly braces for dynamic variables, e.g., `{{topic}}`.
+                      The core content of your prompt. You can use double curly braces for dynamic variables, e.g., {'{{topic}}'}.
                     </FormDescription>
                     <FormMessage />
                   </FormItem>

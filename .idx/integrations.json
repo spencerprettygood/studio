@@ -1,4 +1,7 @@
 {
-  "firebase_hosting": {},
+  "firebase_hosting": {
+    "deploymentHostingUrl": "https://promptflow-cf4tx.web.app"
+  },
+  "cloud_run_deploy": {},
   "gemini_api": {}
 }

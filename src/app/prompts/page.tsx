@@ -8,7 +8,7 @@ import { collection, getDocs, deleteDoc, doc, DocumentData } from 'firebase/fire
 import { db } from '@/lib/firebase';
 import type { Prompt } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PromptCard } from '@/components/PromptCard';
 import { PlusCircle, Search, Loader2, Bot, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';

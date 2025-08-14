@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { optimizePrompt, OptimizePromptInput, OptimizePromptOutput } from '@/ai/flows/optimize-prompt';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -67,7 +67,7 @@ export function PromptOptimizerDialog({ isOpen, onOpenChange, currentPrompt, onA
   };
 
   // Reset state when dialog is opened with a new prompt
-  useState(() => {
+  useEffect(() => {
     if (isOpen) {
       setPromptToOptimize(currentPrompt);
       setContext('');
@@ -75,7 +75,7 @@ export function PromptOptimizerDialog({ isOpen, onOpenChange, currentPrompt, onA
       setIsLoading(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen, currentPrompt]);
+  }, [isOpen]);
 
 
   return (

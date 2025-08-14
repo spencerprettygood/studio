@@ -1,0 +1,78 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isValidPrompt() {
+      return request.resource.data.keys().hasAll(['name', 'template', 'userId']) &&
+             request.resource.data.name is string &&
+             request.resource.data.template is string &&
+             request.resource.data.userId == request.auth.uid;
+    }
+    
+    // Prompts collection rules
+    match /prompts/{promptId} {
+      // Users can only read their own prompts
+      allow read: if isAuthenticated() && 
+                     (resource.data.userId == request.auth.uid || 
+                      resource.data.public == true);
+      
+      // Users can create prompts with their userId
+      allow create: if isAuthenticated() && 
+                       isValidPrompt() &&
+                       request.resource.data.userId == request.auth.uid;
+      
+      // Users can only update their own prompts
+      allow update: if isOwner(resource.data.userId) &&
+                       request.resource.data.userId == resource.data.userId;
+      
+      // Users can only delete their own prompts
+      allow delete: if isOwner(resource.data.userId);
+    }
+    
+    // Users collection for profiles
+    match /users/{userId} {
+      // Users can read any public profile or their own
+      allow read: if isAuthenticated() && 
+                     (request.auth.uid == userId || 
+                      resource.data.public == true);
+      
+      // Users can only create their own profile
+      allow create: if isAuthenticated() && 
+                       request.auth.uid == userId;
+      
+      // Users can only update their own profile
+      allow update: if isOwner(userId);
+      
+      // Users cannot delete profiles (soft delete only)
+      allow delete: if false;
+    }
+    
+    // Future: Workspaces collection
+    match /workspaces/{workspaceId} {
+      // Check if user is a member of the workspace
+      function isMember() {
+        return isAuthenticated() && 
+               request.auth.uid in resource.data.members;
+      }
+      
+      allow read: if isMember();
+      allow write: if isMember() && 
+                      request.auth.uid in resource.data.admins;
+    }
+    
+    // Rate limiting rule (pseudo-implementation)
+    // Note: Real rate limiting should be done at the application level
+    match /{document=**} {
+      allow read: if isAuthenticated() &&
+                     request.time < resource.data.lastAccess + duration.value(1, 's');
+    }
+  }
+}

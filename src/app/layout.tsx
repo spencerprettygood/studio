@@ -4,6 +4,7 @@ import { Inter } from 'next/font/google';
 import './globals.css';
 import { Toaster } from '@/components/ui/toaster';
 import { QueryProvider } from '@/components/QueryProvider';
+import { AuthProvider } from '@/contexts/AuthContext';
 import { NavMenu } from '@/components/NavMenu';
 
 const inter = Inter({ 
@@ -24,13 +25,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased bg-background text-foreground`}>
-        <QueryProvider>
-          <NavMenu />
-          <main className="min-h-screen flex flex-col pt-16">
-            {children}
-          </main>
-          <Toaster />
-        </QueryProvider>
+        <AuthProvider>
+          <QueryProvider>
+            <NavMenu />
+            <main className="min-h-screen flex flex-col pt-16">
+              {children}
+            </main>
+            <Toaster />
+          </QueryProvider>
+        </AuthProvider>
       </body>
     </html>
   );

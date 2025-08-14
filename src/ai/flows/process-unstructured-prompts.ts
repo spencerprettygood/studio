@@ -11,7 +11,27 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import { mockCategories } from '@/lib/mockPrompts'; // To provide existing categories to the AI
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
+
+
+// Dynamically fetch categories from Firestore to provide to the AI.
+async function getAvailableCategories(): Promise<string[]> {
+    const promptsCollection = collection(db, 'prompts');
+    const snapshot = await getDocs(promptsCollection);
+    const categories = new Set<string>();
+    snapshot.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.category) {
+            categories.add(data.category);
+        }
+    });
+    // Add some default categories in case the library is empty
+    const defaultCategories = ["Writing", "Marketing", "Development", "Business", "Personal", "Uncategorized"];
+    defaultCategories.forEach(cat => categories.add(cat));
+    return Array.from(categories);
+}
+
 
 const ProcessUnstructuredPromptsInputSchema = z.object({
   unstructuredPrompts: z.string().describe('A block of text containing one or more unorganized prompts.'),
@@ -35,7 +55,8 @@ const ProcessUnstructuredPromptsOutputSchema = z.object({
 export type ProcessUnstructuredPromptsOutput = z.infer<typeof ProcessUnstructuredPromptsOutputSchema>;
 
 export async function processUnstructuredPrompts(input: { unstructuredPrompts: string }): Promise<ProcessUnstructuredPromptsOutput> {
-  return processUnstructuredPromptsFlow({ unstructuredPrompts: input.unstructuredPrompts, availableCategories: mockCategories });
+  const availableCategories = await getAvailableCategories();
+  return processUnstructuredPromptsFlow({ unstructuredPrompts: input.unstructuredPrompts, availableCategories });
 }
 
 const prompt = ai.definePrompt({
@@ -43,9 +64,10 @@ const prompt = ai.definePrompt({
   input: {schema: ProcessUnstructuredPromptsInputSchema},
   output: {schema: ProcessUnstructuredPromptsOutputSchema},
   prompt: `You are an AI assistant specialized in analyzing and structuring LLM prompts.
-The user has provided a block of text containing one or more unorganized prompts.
+The user has provided a block of text containing one or more unorganized prompts. Your primary task is to find and extract text that is clearly intended to be a prompt for an AI. Ignore conversational text, notes, or meta-commentary. A prompt is a direct instruction to an AI.
+
 Your task is to process this text and for each distinct prompt you identify:
-1.  Extract the core prompt text.
+1.  Extract the core prompt text. A prompt is an instruction intended for an LLM. It often contains placeholders like {{variable}}.
 2.  Generate a concise and descriptive title for the prompt (max 10 words).
 3.  Generate a brief description for the prompt (1-2 sentences) explaining its purpose.
 4.  Suggest a relevant category for the prompt. You can use one from the provided available categories if it fits well, or suggest a new single-word category. Available categories: {{#each availableCategories}}"{{this}}"{{#unless @last}}, {{/unless}}{{/each}}.
@@ -69,8 +91,7 @@ Return your response as a JSON object containing a key "processedPrompts" which 
   "followUpPromptSuggestion": "Optional: Suggestion for a follow-up prompt or system connection."
 }
 
-Ensure that each identified prompt from the input text results in one object in the output array.
-If the input text is empty or contains no discernible prompts, return an empty array for "processedPrompts".
+Ensure that only text that looks like an actual command or instruction to an LLM is extracted. If the input text is empty or contains no discernible prompts, return an empty array for "processedPrompts".
 Focus on extracting and improving actual prompts. Ignore any surrounding text that is not part of a prompt.
 Be careful with escaping characters in the JSON output, especially within the prompt texts.
 `,

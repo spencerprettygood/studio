@@ -4,7 +4,7 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, deleteDoc, doc, query, where, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Prompt } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PromptCard } from '@/components/PromptCard';
-import { mockCategories } from '@/lib/mockPrompts';
 import { PlusCircle, Search, XCircle, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -47,6 +46,22 @@ const fetchPrompts = async (): Promise<Prompt[]> => {
     });
 };
 
+// This function is for fetching the available categories for the filter dropdown
+const fetchFilterData = async () => {
+    const prompts = await fetchPrompts(); // Re-uses the main fetch function
+    const categoriesSet = new Set<string>();
+    const tagsSet = new Set<string>();
+    prompts.forEach(p => {
+        if (p.category) categoriesSet.add(p.category);
+        p.tags?.forEach(tag => tagsSet.add(tag));
+    });
+    return {
+        prompts,
+        categories: Array.from(categoriesSet).sort(),
+        tags: Array.from(tagsSet).sort()
+    };
+};
+
 export default function PromptsPage() {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -56,15 +71,17 @@ export default function PromptsPage() {
   const [selectedTag, setSelectedTag] = useState<string>('');
   const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
 
-  const { data: prompts = [], isLoading } = useQuery<Prompt[]>({
-    queryKey: ['prompts'],
-    queryFn: fetchPrompts,
+  const { data, isLoading } = useQuery({
+    queryKey: ['promptsDashboard'],
+    queryFn: fetchFilterData,
   });
+
+  const { prompts = [], categories = [], tags: allTags = [] } = data || {};
 
   const deleteMutation = useMutation({
     mutationFn: (id: string) => deleteDoc(doc(db, "prompts", id)),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['prompts'] });
+      queryClient.invalidateQueries({ queryKey: ['promptsDashboard'] });
       toast({
         title: "Prompt Deleted",
         description: "The prompt has been successfully deleted.",
@@ -74,7 +91,7 @@ export default function PromptsPage() {
     onError: (error) => {
       toast({
         title: "Error Deleting Prompt",
-        description: error.message,
+        description: (error as Error).message,
         variant: "destructive",
       });
       setPromptToDelete(null);
@@ -98,12 +115,6 @@ export default function PromptsPage() {
       description: `${prompt.name} has been exported as JSON.`,
     });
   };
-
-  const allTags = useMemo(() => {
-    const tagsSet = new Set<string>();
-    prompts.forEach(p => p.tags?.forEach(tag => tagsSet.add(tag)));
-    return Array.from(tagsSet).sort();
-  }, [prompts]);
 
   const filteredPrompts = useMemo(() => {
     return prompts.filter(prompt => {
@@ -133,9 +144,9 @@ export default function PromptsPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
+    <div className="w-full mx-auto p-4 sm:p-6 lg:p-8 space-y-8">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <h1 className="text-3xl font-bold tracking-tight text-foreground">Prompt Dashboard</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Prompt Library</h1>
         <Button asChild size="lg">
           <Link href="/prompts/new">
             <PlusCircle className="mr-2 h-5 w-5" /> New Prompt
@@ -169,7 +180,7 @@ export default function PromptsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={ALL_CATEGORIES_SENTINEL}>All Categories</SelectItem>
-                {mockCategories.map(category => (
+                {categories.map(category => (
                   <SelectItem key={category} value={category}>{category}</SelectItem>
                 ))}
               </SelectContent>

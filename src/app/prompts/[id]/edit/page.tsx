@@ -2,14 +2,14 @@
 "use client";
 
 import { PromptForm } from '@/components/PromptForm';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { doc, getDoc, DocumentData } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import type { Prompt, PromptFormData } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import { Loader2 } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Loader2, AlertTriangle } from 'lucide-react';
+import Link from 'next/link';
 
 const fetchPrompt = async (id: string): Promise<Prompt | null> => {
     const promptDoc = await getDoc(doc(db, 'prompts', id));
@@ -41,20 +41,18 @@ export default function EditPromptPage() {
 
   if (isLoading) {
     return (
-      <div className="max-w-4xl mx-auto p-4 space-y-4">
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        </div>
+      <div className="flex justify-center items-center h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error) {
     return (
-       <div className="max-w-4xl mx-auto p-4">
-        <Card className="mt-10">
+       <div className="container max-w-4xl mx-auto p-4">
+        <Card className="mt-10 border-destructive bg-destructive/10">
           <CardHeader>
-            <CardTitle className="text-destructive">Error</CardTitle>
+            <CardTitle className="text-destructive flex items-center gap-2"><AlertTriangle/>Error</CardTitle>
           </CardHeader>
           <CardContent>
             <p>Could not load prompt data. {(error as Error).message}</p>
@@ -66,13 +64,13 @@ export default function EditPromptPage() {
   
   if (!promptData) {
      return (
-       <div className="max-w-4xl mx-auto p-4">
+       <div className="container max-w-4xl mx-auto p-4">
         <Card className="mt-10">
           <CardHeader>
             <CardTitle>Not Found</CardTitle>
           </CardHeader>
           <CardContent>
-            <p>Sorry, we couldn't find the prompt you're looking for. Would you like to <a href="/prompts" className="underline text-primary">go back to all prompts</a>?</p>
+            <p>Sorry, we couldn't find the prompt you're looking for. Would you like to <Link href="/prompts" className="underline text-primary">go back to all prompts</Link>?</p>
           </CardContent>
         </Card>
       </div>
@@ -86,7 +84,7 @@ export default function EditPromptPage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div className="container max-w-4xl mx-auto p-4">
       <PromptForm initialData={initialFormData} isEditing={true} />
     </div>
   );

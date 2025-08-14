@@ -16,11 +16,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
 import type { PromptFormData } from '@/lib/types';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { Brain, Save, Download, Lightbulb } from "lucide-react";
+import { Brain, Save, Lightbulb, ArrowLeft } from "lucide-react";
 import { useState, useEffect } from "react";
 import { PromptOptimizerDialog } from "./PromptOptimizerDialog";
 import { mockCategories } from "@/lib/mockPrompts";
@@ -110,15 +109,6 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
 
 
   const currentPromptTemplate = form.watch("template");
-
-  async function onSubmit(data: PromptFormValues) {
-    mutation.mutate(data);
-  }
-
-  const handleExport = () => {
-    const values = form.getValues();
-    // ... (export logic remains the same)
-  };
   
   const handleApplyOptimizedPrompt = (optimizedPrompt: string) => {
     form.setValue("template", optimizedPrompt, { shouldValidate: true, shouldDirty: true });
@@ -127,18 +117,21 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
 
   return (
     <>
+      <div className="space-y-2 mb-8">
+         <Button variant="ghost" onClick={() => router.back()} className="px-2 h-auto text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Library
+        </Button>
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          {isEditing ? "Edit Prompt" : "Create New Prompt"}
+        </h1>
+        <p className="text-muted-foreground">
+          {isEditing ? "Modify the details of your existing prompt template." : "Craft a new reusable prompt template for your AI workflows."}
+        </p>
+      </div>
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <Card className="shadow-lg">
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold text-foreground">
-                {isEditing ? "Edit Prompt" : "Create New Prompt"}
-              </CardTitle>
-              <CardDescription>
-                {isEditing ? "Modify the details of your existing prompt." : "Craft a new prompt template for your AI workflows."}
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
+        <form onSubmit={form.handleSubmit(mutation.mutate)} className="space-y-8">
+            <div className="space-y-6 p-6 border rounded-lg bg-card">
               <FormField
                 control={form.control}
                 name="name"
@@ -246,24 +239,17 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
                 />
               </div>
 
-            </CardContent>
-            <CardFooter className="flex flex-col sm:flex-row justify-between items-center gap-4 border-t pt-6">
-                <Button type="button" variant="outline" onClick={handleExport} disabled={mutation.isPending}>
-                  <Download className="mr-2 h-4 w-4" /> Export to JSON
+            </div>
+            <div className="flex justify-end gap-2">
+                <Button type="button" variant="ghost" onClick={() => router.back()} disabled={mutation.isPending}>
+                    Cancel
                 </Button>
-              <div className="flex gap-2">
-                
-                  <Button type="button" variant="ghost" onClick={() => router.back()} disabled={mutation.isPending}>
-                     Cancel
-                  </Button>
-                
-                <Button type="submit" disabled={mutation.isPending} size="lg">
-                  {mutation.isPending ? <Brain className="mr-2 h-4 w-4 animate-pulse" /> : <Save className="mr-2 h-4 w-4" />}
-                  {isEditing ? "Save Changes" : "Create Prompt"}
-                </Button>
-              </div>
-            </CardFooter>
-          </Card>
+              
+              <Button type="submit" disabled={mutation.isPending} size="lg">
+                {mutation.isPending ? <Brain className="mr-2 h-4 w-4 animate-pulse" /> : <Save className="mr-2 h-4 w-4" />}
+                {isEditing ? "Save Changes" : "Create Prompt"}
+              </Button>
+            </div>
         </form>
       </Form>
       <PromptOptimizerDialog 

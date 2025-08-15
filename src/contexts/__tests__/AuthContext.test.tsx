@@ -130,7 +130,7 @@ describe('AuthContext', () => {
 
     // Simulate logged in state
     const { onAuthStateChanged } = await import('firebase/auth');
-    const mockCallback = vi.mocked(onAuthStateChanged).mock.calls[0][1];
+    const mockCallback = vi.mocked(onAuthStateChanged).mock.calls[0][1] as Function;
     mockCallback({ uid: '123', email: 'test@example.com' } as any);
 
     await waitFor(() => {

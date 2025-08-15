@@ -14,7 +14,7 @@ interface TokenBucket {
   lastRefill: number;
 }
 
-class RateLimiter {
+export class RateLimiter {
   private buckets: Map<string, TokenBucket> = new Map();
   private cleanupInterval: NodeJS.Timeout;
 
@@ -87,6 +87,86 @@ class RateLimiter {
         this.buckets.delete(identifier);
       }
     }
+  }
+
+  /**
+   * Simple method for testing - returns true if request is allowed
+   */
+  tryConsume(identifier: string): boolean {
+    const result = this.checkLimitSync(identifier);
+    return result.allowed;
+  }
+
+  /**
+   * Synchronous version of checkLimit for testing
+   */
+  checkLimitSync(identifier: string): { allowed: boolean; remaining: number; resetAt: Date } {
+    const now = Date.now();
+    let bucket = this.buckets.get(identifier);
+
+    if (!bucket) {
+      bucket = {
+        tokens: this.config.maxRequests - 1,
+        lastRefill: now,
+      };
+      this.buckets.set(identifier, bucket);
+      
+      return {
+        allowed: true,
+        remaining: bucket.tokens,
+        resetAt: new Date(now + this.config.windowMs),
+      };
+    }
+
+    const timePassed = now - bucket.lastRefill;
+    const tokensToAdd = Math.floor(timePassed / this.config.windowMs) * this.config.maxRequests;
+
+    if (tokensToAdd > 0) {
+      bucket.tokens = Math.min(this.config.maxRequests, bucket.tokens + tokensToAdd);
+      bucket.lastRefill = now;
+    }
+
+    if (bucket.tokens > 0) {
+      bucket.tokens--;
+      return {
+        allowed: true,
+        remaining: bucket.tokens,
+        resetAt: new Date(now + this.config.windowMs),
+      };
+    }
+
+    return {
+      allowed: false,
+      remaining: 0,
+      resetAt: new Date(bucket.lastRefill + this.config.windowMs),
+    };
+  }
+
+  /**
+   * Get remaining requests for identifier
+   */
+  getRemainingRequests(identifier: string): number {
+    const bucket = this.buckets.get(identifier);
+    if (!bucket) return this.config.maxRequests;
+    
+    const now = Date.now();
+    const timePassed = now - bucket.lastRefill;
+    const tokensToAdd = Math.floor(timePassed / this.config.windowMs) * this.config.maxRequests;
+    
+    if (tokensToAdd > 0) {
+      return Math.min(this.config.maxRequests, bucket.tokens + tokensToAdd);
+    }
+    
+    return bucket.tokens;
+  }
+
+  /**
+   * Get reset time for identifier
+   */
+  getResetTime(identifier: string): number {
+    const bucket = this.buckets.get(identifier);
+    if (!bucket) return Date.now() + this.config.windowMs;
+    return bucket.lastRefill + this.config.windowMs;
   }
 
   /**

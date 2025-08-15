@@ -226,7 +226,7 @@ describe('/api/prompts', () => {
       expect(response.status).toBe(201);
       
       // Check that addDoc was called with sanitized data
-      const addDocCall = vi.mocked(addDoc).mock.calls[0][1];
+      const addDocCall = vi.mocked(addDoc).mock.calls[0][1] as any;
       expect(addDocCall.name).toBe('Test Prompt');
       expect(addDocCall.tags).toEqual(['test', 'automation']);
     });

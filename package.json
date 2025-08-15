@@ -12,7 +12,15 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest",
     "test:ui": "vitest --ui",
-    "test:coverage": "vitest run --coverage"
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,md}\"",
+    "security:audit": "npm audit --audit-level=high",
+    "docker:build": "docker build -t rofl-platform .",
+    "docker:run": "docker run -p 3000:3000 rofl-platform",
+    "deploy": "./scripts/deploy.sh"
   },
   "dependencies": {
     "@genkit-ai/googleai": "^1.8.0",
@@ -45,6 +53,7 @@
     "date-fns": "^3.6.0",
     "dotenv": "^16.5.0",
     "firebase": "^11.8.1",
+    "firebase-admin": "^13.4.0",
     "genkit": "^1.8.0",
     "lucide-react": "^0.475.0",
     "next": "^15.4.6",

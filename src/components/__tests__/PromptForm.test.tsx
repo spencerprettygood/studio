@@ -202,7 +202,7 @@ describe('PromptForm', () => {
       
       // Make addDoc take longer
       vi.mocked(addDoc).mockImplementation(() => 
-        new Promise(resolve => setTimeout(() => resolve({ id: 'test' }), 100))
+        new Promise(resolve => setTimeout(() => resolve({ id: 'test' } as any), 100))
       );
       
       render(<PromptForm />);

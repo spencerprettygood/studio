@@ -27,6 +27,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { db } from '@/lib/firebase';
 import { addDoc, collection, doc, updateDoc, Timestamp } from "firebase/firestore";
+import { useAuth } from '@/contexts/AuthContext';
 
 const promptFormSchema = z.object({
   name: z.string().min(3, { message: "Name must be at least 3 characters." }).max(100),
@@ -49,6 +50,7 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
   const queryClient = useQueryClient();
   const { toast } = useToast();
   const router = useRouter();
+  const { user } = useAuth();
   const [isOptimizerOpen, setIsOptimizerOpen] = useState(false);
 
   const form = useForm<PromptFormValues>({
@@ -74,10 +76,13 @@ export function PromptForm({ initialData, isEditing = false }: PromptFormProps) 
 
   const mutation = useMutation({
     mutationFn: async (data: PromptFormValues) => {
+        if (!user) throw new Error('User not authenticated');
+        
         const processedData = {
           ...data,
           tags: data.tags.split(',').map(tag => tag.trim()).filter(Boolean),
           updatedAt: Timestamp.now(),
+          userId: user.uid,
         };
 
         if (isEditing && initialData?.id) {

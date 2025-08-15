@@ -4,8 +4,9 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { collection, getDocs, deleteDoc, doc, DocumentData } from 'firebase/firestore';
+import { collection, getDocs, deleteDoc, doc, DocumentData, query, where } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
+import { useAuth } from '@/contexts/AuthContext';
 import type { Prompt } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -27,9 +28,23 @@ import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
 
-const fetchPrompts = async (): Promise<Prompt[]> => {
-    const promptsCollection = collection(db, 'prompts');
-    const snapshot = await getDocs(promptsCollection);
+export default function PromptsPage() {
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { user } = useAuth();
+
+  const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+
+  const fetchPrompts = async (): Promise<Prompt[]> => {
+    if (!user) return [];
+    
+    const promptsQuery = query(
+      collection(db, 'prompts'),
+      where('userId', '==', user.uid)
+    );
+    const snapshot = await getDocs(promptsQuery);
+    
     return snapshot.docs.map(doc => {
         const data = doc.data() as DocumentData;
         return {
@@ -39,22 +54,16 @@ const fetchPrompts = async (): Promise<Prompt[]> => {
             template: data.template,
             tags: data.tags || [],
             category: data.category,
-            createdAt: data.createdAt.toDate().toISOString(),
-            updatedAt: data.updatedAt.toDate().toISOString(),
+            createdAt: data.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+            updatedAt: data.updatedAt?.toDate?.()?.toISOString() || new Date().toISOString(),
         };
     }).sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
-};
-
-export default function PromptsPage() {
-  const queryClient = useQueryClient();
-  const { toast } = useToast();
-
-  const [promptToDelete, setPromptToDelete] = useState<string | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('All');
+  };
 
   const { data: prompts, isLoading: isLoadingPrompts, error: promptsError } = useQuery({
-    queryKey: ['prompts'],
+    queryKey: ['prompts', user?.uid],
     queryFn: fetchPrompts,
+    enabled: !!user,
   });
 
   const { data: aiCategories, isLoading: isLoadingCategories, error: categoriesError } = useQuery({
